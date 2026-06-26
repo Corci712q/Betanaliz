@@ -1,90 +1,79 @@
-'use client'
-import React, { useState } from 'react'
-import { computeMatchProbs, computeLambdas } from '@/lib/poisson'
-import type { AnalysisResult } from '@/lib/poisson'
-import { FormGroup, Button, InfoBox } from './ui'
-import AnalysisCard from './AnalysisCard'
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-function NumInput({ id, value, onChange, placeholder }: {
-  id: string; value: string; onChange: (v: string) => void; placeholder?: string
-}) {
-  return <input type="number" id={id} min="0" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder || '0'} />
+:root {
+  --bg: #f8f8f7;
+  --surface: #ffffff;
+  --surface-2: #f4f4f2;
+  --border: #e5e5e3;
+  --text: #1a1a18;
+  --text-secondary: #6b6b67;
+  --text-muted: #9b9b97;
+  --accent: #4f46e5;
+  --accent-bg: #eef2ff;
+  --accent-border: #c7d2fe;
+  --accent-text: #3730a3;
+  --success-bg: #f0fdf4;
+  --success-text: #15803d;
+  --warning-bg: #fffbeb;
+  --warning-text: #b45309;
+  --danger-bg: #fef2f2;
+  --danger-text: #b91c1c;
+  --radius: 8px;
 }
 
-export default function ManualAnalysisTab({ onResult }: { onResult: (r: AnalysisResult) => void }) {
-  const [home, setHome] = useState('')
-  const [away, setAway] = useState('')
-  const [result, setResult] = useState<AnalysisResult | null>(null)
-
-  const fields = {
-    hw: useState(''), hd: useState(''), hl: useState(''),
-    hgf: useState(''), hga: useState(''), hxg: useState(''),
-    aw: useState(''), ad: useState(''), al: useState(''),
-    agf: useState(''), aga: useState(''), axg: useState(''),
-    h2hw: useState(''), h2hd: useState(''), h2haw: useState(''), h2ht: useState(''),
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111110;
+    --surface: #1c1c1a;
+    --surface-2: #252523;
+    --border: #2e2e2c;
+    --text: #eeeeec;
+    --text-secondary: #a8a8a4;
+    --text-muted: #6b6b67;
+    --accent: #818cf8;
+    --accent-bg: #1e1b4b;
+    --accent-border: #3730a3;
+    --accent-text: #a5b4fc;
+    --success-bg: #052e16;
+    --success-text: #4ade80;
+    --warning-bg: #1c1400;
+    --warning-text: #fbbf24;
+    --danger-bg: #1a0000;
+    --danger-text: #f87171;
   }
-
-  const n = (key: keyof typeof fields) => parseFloat(fields[key][0]) || 0
-
-  function compute() {
-    const stats = {
-      hW: n('hw'), hD: n('hd'), hL: n('hl'), hGF: n('hgf'), hGA: n('hga'), hXG: n('hxg'),
-      aW: n('aw'), aD: n('ad'), aL: n('al'), aGF: n('agf'), aGA: n('aga'), aXG: n('axg'),
-      h2hHW: n('h2hw'), h2hD: n('h2hd'), h2hAW: n('h2haw'), h2hTotal: n('h2ht') || 1,
-    }
-    const { lambdaH, lambdaA } = computeLambdas(stats)
-    const probs = computeMatchProbs(lambdaH, lambdaA)
-    const item: AnalysisResult = {
-      home: home || '1. Takım', away: away || '2. Takım', league: 'Manuel',
-      lambdaH, lambdaA, ...probs,
-      date: new Date().toLocaleDateString('tr-TR'), id: Date.now(),
-    }
-    setResult(item)
-    onResult(item)
-  }
-
-  const half: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }
-
-  return (
-    <div>
-      <InfoBox>İstatistikleri gir, Poisson + Dixon-Coles yöntemiyle hesaplayalım.</InfoBox>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 36px 1fr', gap: 8, alignItems: 'end', marginBottom: '.875rem' }}>
-        <FormGroup label="1. Takım"><input value={home} onChange={e => setHome(e.target.value)} placeholder="Takım adı" /></FormGroup>
-        <div style={{ textAlign: 'center', paddingBottom: 8, fontSize: 16, color: 'var(--text-muted)', fontWeight: 500 }}>vs</div>
-        <FormGroup label="2. Takım"><input value={away} onChange={e => setAway(e.target.value)} placeholder="Takım adı" /></FormGroup>
-      </div>
-
-      <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8, marginTop: 4 }}>Son 5 maç — 1. Takım</div>
-      <div style={half}>
-        <FormGroup label="Galibiyet"><NumInput id="hw" value={fields.hw[0]} onChange={fields.hw[1]} placeholder="0-5" /></FormGroup>
-        <FormGroup label="Beraberlik"><NumInput id="hd" value={fields.hd[0]} onChange={fields.hd[1]} placeholder="0-5" /></FormGroup>
-        <FormGroup label="Mağlubiyet"><NumInput id="hl" value={fields.hl[0]} onChange={fields.hl[1]} placeholder="0-5" /></FormGroup>
-        <FormGroup label="Atılan gol"><NumInput id="hgf" value={fields.hgf[0]} onChange={fields.hgf[1]} /></FormGroup>
-        <FormGroup label="Yenilen gol"><NumInput id="hga" value={fields.hga[0]} onChange={fields.hga[1]} /></FormGroup>
-        <FormGroup label="xG ort."><NumInput id="hxg" value={fields.hxg[0]} onChange={fields.hxg[1]} placeholder="1.5" /></FormGroup>
-      </div>
-
-      <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8, marginTop: 4 }}>Son 5 maç — 2. Takım</div>
-      <div style={half}>
-        <FormGroup label="Galibiyet"><NumInput id="aw" value={fields.aw[0]} onChange={fields.aw[1]} placeholder="0-5" /></FormGroup>
-        <FormGroup label="Beraberlik"><NumInput id="ad" value={fields.ad[0]} onChange={fields.ad[1]} placeholder="0-5" /></FormGroup>
-        <FormGroup label="Mağlubiyet"><NumInput id="al" value={fields.al[0]} onChange={fields.al[1]} placeholder="0-5" /></FormGroup>
-        <FormGroup label="Atılan gol"><NumInput id="agf" value={fields.agf[0]} onChange={fields.agf[1]} /></FormGroup>
-        <FormGroup label="Yenilen gol"><NumInput id="aga" value={fields.aga[0]} onChange={fields.aga[1]} /></FormGroup>
-        <FormGroup label="xG ort."><NumInput id="axg" value={fields.axg[0]} onChange={fields.axg[1]} placeholder="1.2" /></FormGroup>
-      </div>
-
-      <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8, marginTop: 4 }}>H2H</div>
-      <div style={half}>
-        <FormGroup label="1. takım galibiyeti"><NumInput id="h2hw" value={fields.h2hw[0]} onChange={fields.h2hw[1]} /></FormGroup>
-        <FormGroup label="2. takım galibiyeti"><NumInput id="h2haw" value={fields.h2haw[0]} onChange={fields.h2haw[1]} /></FormGroup>
-        <FormGroup label="Beraberlik"><NumInput id="h2hd" value={fields.h2hd[0]} onChange={fields.h2hd[1]} /></FormGroup>
-        <FormGroup label="Toplam maç"><NumInput id="h2ht" value={fields.h2ht[0]} onChange={fields.h2ht[1]} placeholder="5" /></FormGroup>
-      </div>
-
-      <Button variant="primary" fullWidth onClick={compute}>🧮 Hesapla</Button>
-      {result && <AnalysisCard result={result} />}
-    </div>
-  )
 }
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+input, select, textarea, button {
+  font-family: inherit;
+  font-size: 14px;
+}
+
+input, select {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+}
+input:focus, select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+}
+
+select option { background: var(--surface); color: var(--text); }

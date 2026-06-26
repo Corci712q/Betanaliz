@@ -1,69 +1,69 @@
 'use client'
 import React from 'react'
 import type { AnalysisResult } from '@/lib/poisson'
-import { Badge } from './ui'
+import { Badge, Button } from './ui'
 
-export default function StatsPage({
-  history, isCorrect, accuracy
+export default function HistoryPage({
+  history, onSetResult, onClear, isCorrect
 }: {
   history: AnalysisResult[]
+  onSetResult: (id: number, r: '1' | 'X' | '2') => void
+  onClear: () => void
   isCorrect: (item: AnalysisResult) => boolean | null
-  accuracy: number | null
 }) {
-  const withResult = history.filter(x => x.result)
-  const correct = withResult.filter(x => isCorrect(x) === true).length
-
   if (!history.length) return (
     <div style={{ textAlign: 'center', padding: '2.5rem 1rem', color: 'var(--text-secondary)' }}>
-      <div style={{ fontSize: 40, marginBottom: 12 }}>🏆</div>
+      <div style={{ fontSize: 40, marginBottom: 12 }}>📋</div>
       <div style={{ fontWeight: 500, marginBottom: 4 }}>Henüz analiz yok</div>
-      <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Analizler yaptıkça isabet oranın burada görünür.</div>
+      <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>İlk maçını analiz et!</div>
     </div>
   )
 
   return (
     <div>
-      <div style={{ fontWeight: 500, marginBottom: '1rem' }}>İsabet oranı takibi</div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: '1.5rem' }}>
-        {[
-          { label: 'Toplam analiz', value: history.length, color: 'var(--accent)' },
-          { label: 'Sonuç girilen', value: withResult.length, color: 'var(--text)' },
-          { label: 'İsabet', value: accuracy !== null ? `${accuracy}%` : '-', color: accuracy !== null && accuracy >= 50 ? 'var(--success-text)' : 'var(--danger-text)' },
-        ].map(c => (
-          <div key={c.label} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '1rem', textAlign: 'center' }}>
-            <div style={{ fontSize: 28, fontWeight: 500, color: c.color }}>{c.value}</div>
-            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>{c.label}</div>
-          </div>
-        ))}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <div style={{ fontWeight: 500 }}>Analiz geçmişi ({history.length})</div>
+        <Button size="sm" onClick={onClear}>🗑 Temizle</Button>
       </div>
 
-      {withResult.length > 0 && (
-        <>
-          <div style={{ height: 1, background: 'var(--border)', margin: '1rem 0' }} />
-          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>Son sonuçlar</div>
-          {withResult.slice(0, 15).map(item => {
-            const correct = isCorrect(item)
-            return (
-              <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
-                <div>
-                  <div style={{ fontWeight: 500 }}>{item.home} vs {item.away}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{item.date} — Tahmin: {item.homeWin > item.draw && item.homeWin > item.awayWin ? '1' : item.draw > item.awayWin ? 'X' : '2'}</div>
+      {history.map(item => {
+        const correct = isCorrect(item)
+        return (
+          <div key={item.id} style={{ borderBottom: '1px solid var(--border)', padding: '12px 0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 500, fontSize: 14 }}>{item.home} vs {item.away}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
+                  {item.league && `${item.league} — `}{item.date} — En olası: {item.topScores[0]?.h}-{item.topScores[0]?.a}
                 </div>
-                <Badge variant={correct ? 'success' : 'danger'}>
-                  {correct ? '✓ İsabet' : '✗ Yanış'}
-                </Badge>
+                <div style={{ display: 'flex', gap: 5, marginTop: 6 }}>
+                  <Badge variant="accent">{item.home} {item.homeWin}%</Badge>
+                  <Badge variant="neutral">Ber {item.draw}%</Badge>
+                  <Badge variant="warning">{item.away} {item.awayWin}%</Badge>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Sonuç:</span>
+                  <select
+                    value={item.result || ''}
+                    onChange={e => e.target.value && onSetResult(item.id, e.target.value as '1' | 'X' | '2')}
+                    style={{ width: 'auto', fontSize: 12, padding: '3px 6px' }}
+                  >
+                    <option value="">Gir...</option>
+                    <option value="1">1. Takım kazandı</option>
+                    <option value="X">Beraberlik</option>
+                    <option value="2">2. Takım kazandı</option>
+                  </select>
+                  {correct !== null && (
+                    <Badge variant={correct ? 'success' : 'danger'}>
+                      {correct ? '✓ İsabet' : '✗ Yanış'}
+                    </Badge>
+                  )}
+                </div>
               </div>
-            )
-          })}
-        </>
-      )}
-
-      {withResult.length === 0 && (
-        <div style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', padding: '1rem' }}>
-          Geçmiş sekmesinden maç sonuçlarını gir, isabet oranın burada hesaplanır.
-        </div>
-      )}
+            </div>
+          </div>
+        )
+      })}
     </div>
   )
 }

@@ -1,105 +1,96 @@
 'use client'
-import React from 'react'
+import React, { useState } from 'react'
+import { computeMatchProbs } from '@/lib/poisson'
 import type { AnalysisResult } from '@/lib/poisson'
-import { Card, SectionTitle, Badge } from './ui'
+import { FormGroup, Button, InfoBox, Spinner } from './ui'
+import AnalysisCard from './AnalysisCard'
 
-function ProbCard({ label, pct, isTop }: { label: string; pct: number; isTop: boolean }) {
+const LEAGUES = [
+  { group: '🌍 Milli Takım', options: ['FIFA Dünya Kupası 2026', 'FIFA DK Elemeleri', 'UEFA EURO', 'UEFA Nations League', 'CONMEBOL Copa América', 'CAF Afrika Kupası', 'Hazırlık Maçı'] },
+  { group: '🇹🇷 Türkiye', options: ['Süper Lig', 'TFF 1. Lig', 'Türkiye Kupası'] },
+  { group: '🏆 Avrupa Kulüp', options: ['UEFA Champions League', 'UEFA Europa League', 'UEFA Conference League'] },
+  { group: '🌍 Avrupa Ligleri', options: ['Premier League', 'La Liga', 'Bundesliga', 'Serie A', 'Ligue 1', 'Eredivisie', 'Primeira Liga'] },
+  { group: '🌎 Diğer', options: ['MLS', 'Saudi Pro League', 'Diğer'] },
+]
+
+export default function AIAnalysisTab({ onResult }: { onResult: (r: AnalysisResult) => void }) {
+  const [home, setHome] = useState('')
+  const [away, setAway] = useState('')
+  const [league, setLeague] = useState('')
+  const [note, setNote] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [result, setResult] = useState<AnalysisResult | null>(null)
+  const [error, setError] = useState('')
+
+  async function run() {
+    if (!home.trim() || !away.trim()) { setError('Lütfen iki takımı da girin.'); return }
+    setError(''); setLoading(true); setResult(null)
+    try {
+      const res = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ home, away, league, note }),
+      })
+      const data = await res.json()
+      const probs = computeMatchProbs(data.lambdaH, data.lambdaA)
+      const item: AnalysisResult = {
+        home, away, league, note,
+        lambdaH: data.lambdaH,
+        lambdaA: data.lambdaA,
+        ...probs,
+        analysis: data.analysis,
+        confidence: data.confidence,
+        keyFactor: data.keyFactor,
+        date: new Date().toLocaleDateString('tr-TR'),
+        id: Date.now(),
+      }
+      setResult(item)
+      onResult(item)
+    } catch {
+      setError('Analiz sırasında bir hata oluştu. Tekrar deneyin.')
+    }
+    setLoading(false)
+  }
+
   return (
-    <div style={{
-      background: isTop ? 'var(--accent-bg)' : 'var(--surface-2)',
-      border: `1px solid ${isTop ? 'var(--accent-border)' : 'var(--border)'}`,
-      borderRadius: 'var(--radius)', padding: '11px 8px', textAlign: 'center'
-    }}>
-      <div style={{ fontSize: 11, color: isTop ? 'var(--accent-text)' : 'var(--text-secondary)', marginBottom: 4, fontWeight: 500 }}>
-        {label}
+    <div>
+      <InfoBox>
+        Web araştırması + Poisson dağılımı ile otomatik analiz. (Demo: mock data. Gerçek analiz için API key ekleyin.)
+      </InfoBox>
+
+      <FormGroup label="Lig / Turnuva">
+        <select value={league} onChange={e => setLeague(e.target.value)}>
+          <option value="">Seç...</option>
+          {LEAGUES.map(g => (
+            <optgroup key={g.group} label={g.group}>
+              {g.options.map(o => <option key={o}>{o}</option>)}
+            </optgroup>
+          ))}
+        </select>
+      </FormGroup>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 36px 1fr', gap: 8, alignItems: 'end', marginBottom: '.875rem' }}>
+        <FormGroup label="1. Takım / Ev">
+          <input value={home} onChange={e => setHome(e.target.value)} placeholder="örn. Galatasaray" onKeyDown={e => e.key === 'Enter' && run()} />
+        </FormGroup>
+        <div style={{ textAlign: 'center', paddingBottom: 8, fontSize: 16, color: 'var(--text-muted)', fontWeight: 500 }}>vs</div>
+        <FormGroup label="2. Takım / Dep">
+          <input value={away} onChange={e => setAway(e.target.value)} placeholder="örn. Fenerbahçe" onKeyDown={e => e.key === 'Enter' && run()} />
+        </FormGroup>
       </div>
-      <div style={{ fontSize: 24, fontWeight: 500, color: isTop ? 'var(--accent)' : 'var(--text)' }}>
-        {pct}%
-      </div>
-      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-        oran ~{(100 / pct).toFixed(2)}
-      </div>
+
+      <FormGroup label="Ek not (opsiyonel)">
+        <input value={note} onChange={e => setNote(e.target.value)} placeholder="Eksik oyuncular, önem derecesi..." />
+      </FormGroup>
+
+      {error && <div style={{ color: 'var(--danger-text)', fontSize: 13, marginBottom: 8 }}>{error}</div>}
+
+      <Button variant="primary" fullWidth onClick={run} disabled={loading}>
+        {loading ? '...' : '🔍 Analizi başlat'}
+      </Button>
+
+      {loading && <Spinner />}
+      {result && <AnalysisCard result={result} />}
     </div>
-  )
-}
-
-function ScoreCell({ h, a, pct }: { h: number; a: number; pct: number }) {
-  const isHot = pct >= 8
-  const isWarm = pct >= 4 && pct < 8
-  return (
-    <div style={{
-      background: isHot ? 'var(--danger-bg)' : isWarm ? 'var(--warning-bg)' : 'var(--surface-2)',
-      border: `1px solid ${isHot ? '#fecaca' : isWarm ? '#fde68a' : 'var(--border)'}`,
-      borderRadius: 'var(--radius)', padding: '7px 4px', textAlign: 'center'
-    }}>
-      <div style={{ fontSize: 14, fontWeight: 500, color: isHot ? 'var(--danger-text)' : isWarm ? 'var(--warning-text)' : 'var(--text)' }}>
-        {h}-{a}
-      </div>
-      <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 1 }}>{pct}%</div>
-    </div>
-  )
-}
-
-export default function AnalysisCard({ result }: { result: AnalysisResult }) {
-  const max = Math.max(result.homeWin, result.draw, result.awayWin)
-
-  return (
-    <Card style={{ marginTop: '.875rem' }}>
-      <div style={{ fontSize: 14, fontWeight: 500, marginBottom: '.875rem', display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ fontSize: 18 }}>📊</span>
-        {result.home} — {result.away}
-        {result.league && (
-          <Badge variant="neutral">{result.league}</Badge>
-        )}
-      </div>
-
-      {/* Main odds */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: '1rem' }}>
-        <ProbCard label={result.home} pct={result.homeWin} isTop={result.homeWin === max} />
-        <ProbCard label="Beraberlik" pct={result.draw} isTop={result.draw === max} />
-        <ProbCard label={result.away} pct={result.awayWin} isTop={result.awayWin === max} />
-      </div>
-
-      {/* Score predictions */}
-      <SectionTitle>Poisson skor tahminleri</SectionTitle>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(52px, 1fr))', gap: 6, marginBottom: '1rem' }}>
-        {result.topScores.map(s => (
-          <ScoreCell key={`${s.h}-${s.a}`} h={s.h} a={s.a} pct={s.pct} />
-        ))}
-      </div>
-
-      {/* Extra stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px', marginBottom: '1rem' }}>
-        {[
-          ['2.5 Üst', `${result.over25}%`],
-          ['KG Var', `${result.btts}%`],
-          [`xG (${result.home})`, result.lambdaH.toFixed(2)],
-          [`xG (${result.away})`, result.lambdaA.toFixed(2)],
-          ...(result.confidence ? [['Güven', result.confidence]] : []),
-        ].map(([label, value]) => (
-          <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
-            <span style={{ color: 'var(--text-secondary)' }}>{label}</span>
-            <span style={{ fontWeight: 500 }}>{value}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* Key factor */}
-      {result.keyFactor && (
-        <div style={{ fontSize: 13, color: 'var(--text-secondary)', padding: '8px 12px', background: 'var(--surface-2)', borderRadius: 'var(--radius)', marginBottom: '.875rem' }}>
-          <strong style={{ color: 'var(--text)' }}>Kilit faktör:</strong> {result.keyFactor}
-        </div>
-      )}
-
-      {/* Analysis text */}
-      {result.analysis && (
-        <>
-          <SectionTitle>Analiz</SectionTitle>
-          <div style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--text)', background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '.875rem', whiteSpace: 'pre-wrap' }}>
-            {result.analysis}
-          </div>
-        </>
-      )}
-    </Card>
   )
 }

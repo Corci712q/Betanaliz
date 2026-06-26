@@ -1,5 +1,1 @@
-# Anthropic API Key - Vercel dashboard'a ekle
-# Settings > Environment Variables > ANTHROPIC_API_KEY
-ANTHROPIC_API_KEY=sk-ant-...
-
-# Şu an mock data ile çalışıyor, API key ekleyince gerçek analiz yapacak
+{}

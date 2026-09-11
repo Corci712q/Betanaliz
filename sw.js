@@ -1,4 +1,4 @@
-const CACHE = 'betanaliz-v1'
+const CACHE = 'betanaliz-v2'
 const ASSETS = ['/', '/index.html']
 
 self.addEventListener('install', e => {

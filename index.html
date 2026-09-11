@@ -218,13 +218,13 @@
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
           <label style="font-size:12px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.04em">Yaklaşan Maçlar</label>
           <div style="display:flex;gap:6px;flex-wrap:wrap" id="league-btns">
-            <button class="league-filter-btn active" onclick="loadFixtures(4399,'FIFA Dünya Kupası 2026',this)">🌍 Dünya Kupası</button>
-            <button class="league-filter-btn" onclick="loadFixtures(4681,'Süper Lig',this)">🇹🇷 Süper Lig</button>
+            <button class="league-filter-btn active" onclick="loadFixtures(4339,'Süper Lig',this)">🇹🇷 Süper Lig</button>
             <button class="league-filter-btn" onclick="loadFixtures(4328,'Premier League',this)">🏴󠁧󠁢󠁥󠁮󠁧󠁿 PL</button>
             <button class="league-filter-btn" onclick="loadFixtures(4335,'La Liga',this)">🇪🇸 La Liga</button>
             <button class="league-filter-btn" onclick="loadFixtures(4331,'Bundesliga',this)">🇩🇪 BL</button>
             <button class="league-filter-btn" onclick="loadFixtures(4332,'Serie A',this)">🇮🇹 SA</button>
             <button class="league-filter-btn" onclick="loadFixtures(4480,'Champions League',this)">🏆 UCL</button>
+            <button class="league-filter-btn" onclick="loadFixtures(4429,'FIFA Dünya Kupası 2026',this)">🌍 Dünya Kupası</button>
           </div>
         </div>
         <div id="fixtures-list" style="display:flex;flex-wrap:wrap;gap:6px;min-height:40px">
@@ -1527,13 +1527,14 @@ function buildOranSection(item) {
 }
 
 // ─── Fixtures (ESPN API) ──────────────────────────────────
-let currentLeagueId = 4399
-let currentLeagueName = 'FIFA Dünya Kupası 2026'
+let currentLeagueId = 4339
+let currentLeagueName = 'Süper Lig'
+let fixturesReq = 0
 
-// Lig ID → ESPN slug
+// Lig ID (TheSportsDB) → ESPN slug
 const ESPN_SLUGS = {
-  4399: 'fifa.world',
-  4681: 'tur.1',
+  4429: 'fifa.world',
+  4339: 'tur.1',
   4328: 'eng.1',
   4335: 'esp.1',
   4331: 'ger.1',
@@ -1552,7 +1553,8 @@ async function fetchESPNFixtures(leagueId) {
   const slug = ESPN_SLUGS[leagueId]
   if (!slug) return []
   try {
-    const url = `https://site.api.espn.com/apis/site/v2/sports/soccer/${slug}/scoreboard?dates=${espnDateRange(14)}`
+    // site.api.espn.com tarayıcıdan CORS'a takılıyor, site.web.api.espn.com geçiyor
+    const url = `https://site.web.api.espn.com/apis/site/v2/sports/soccer/${slug}/scoreboard?dates=${espnDateRange(14)}`
     const res = await fetch(url)
     if (!res.ok) return []
     const data = await res.json()
@@ -1570,7 +1572,8 @@ async function fetchESPNFixtures(leagueId) {
         return {
           strHomeTeam: home?.team?.displayName || '',
           strAwayTeam: away?.team?.displayName || '',
-          dateEvent: d.toISOString().split('T')[0],
+          // UTC değil İstanbul günü: gece yarısından sonraki maç doğru güne düşsün
+          dateEvent: d.toLocaleDateString('sv-SE', { timeZone:'Europe/Istanbul' }),
           strTime: d.toLocaleTimeString('tr-TR', { hour:'2-digit', minute:'2-digit', timeZone:'Europe/Istanbul' }),
           strLeague: currentLeagueName,
         }
@@ -1587,6 +1590,7 @@ async function loadFixtures(leagueId, leagueName, btn) {
 
   const el = document.getElementById('fixtures-list')
   el.innerHTML = '<div style="color:var(--text3);font-size:12px;padding:8px">Yükleniyor...</div>'
+  const req = ++fixturesReq
 
   let events = await fetchESPNFixtures(leagueId)
 
@@ -1595,15 +1599,23 @@ async function loadFixtures(leagueId, leagueName, btn) {
     try {
       const r = await fetch(`https://www.thesportsdb.com/api/v1/json/3/eventsnextleague.php?id=${leagueId}`).then(r => r.json())
       const raw = r.events || []
-      events = raw.map(e => ({
-        strHomeTeam: e.strHomeTeam,
-        strAwayTeam: e.strAwayTeam,
-        dateEvent: e.dateEvent || '',
-        strTime: e.strTime || '',
-        strLeague: leagueName,
-      }))
+      events = raw.map(e => {
+        // TheSportsDB saati UTC verir, İstanbul'a çevir
+        const d = e.strTimestamp ? new Date(e.strTimestamp + 'Z') : null
+        const ok = d && !isNaN(d)
+        return {
+          strHomeTeam: e.strHomeTeam,
+          strAwayTeam: e.strAwayTeam,
+          dateEvent: ok ? d.toLocaleDateString('sv-SE', { timeZone:'Europe/Istanbul' }) : (e.dateEvent || ''),
+          strTime: ok ? d.toLocaleTimeString('tr-TR', { hour:'2-digit', minute:'2-digit', timeZone:'Europe/Istanbul' }) : (e.strTime || ''),
+          strLeague: leagueName,
+        }
+      })
     } catch {}
   }
+
+  // Bu arada başka lige tıklandıysa eski yanıt listeyi ezmesin
+  if (req !== fixturesReq) return
 
   if (!events.length) {
     el.innerHTML = '<div style="color:var(--text3);font-size:12px;padding:8px">Yaklaşan maç bulunamadı.</div>'
@@ -1615,7 +1627,8 @@ async function loadFixtures(leagueId, leagueName, btn) {
     const timeStr = (e.strTime || '').substring(0, 5)
     let label = ''
     if (dateStr) {
-      const d = new Date(dateStr + 'T12:00:00')
+      // Gece yarısı: öğlen alınırsa fark 0.5 çıkıp yuvarlanınca bugün "Yarın" oluyordu
+      const d = new Date(dateStr + 'T00:00:00')
       const now = new Date(); now.setHours(0,0,0,0)
       const diffDays = Math.round((d - now) / 86400000)
       if (diffDays === 0) label = `Bugün${timeStr ? ' ' + timeStr : ''}`
@@ -1717,7 +1730,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const saved = getApiKey()
   if (saved) document.getElementById('apikey-input').value = saved
   updateAccuracyChip()
-  loadFixtures(4399, 'FIFA Dünya Kupası 2026', document.querySelector('.league-filter-btn'))
+  loadFixtures(4339, 'Süper Lig', document.querySelector('.league-filter-btn'))
 })
 </script>
 <script>

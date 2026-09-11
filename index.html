@@ -1,0 +1,1729 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BetAnaliz Pro</title>
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BetAnaliz">
+<meta name="theme-color" content="#6c8bff">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3347;
+    --text: #e8eaf0;
+    --text2: #9095a8;
+    --text3: #565d74;
+    --accent: #6c8bff;
+    --accent-bg: rgba(108,139,255,0.12);
+    --success: #34d399;
+    --success-bg: rgba(52,211,153,0.1);
+    --danger: #f87171;
+    --danger-bg: rgba(248,113,113,0.1);
+    --warning: #fbbf24;
+    --warning-bg: rgba(251,191,36,0.1);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; min-height: 100vh; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 1.5rem 1rem 5rem; }
+
+  /* Header */
+  .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+  .header-left h1 { font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .badge { font-size: 11px; font-weight: 400; color: var(--text2); background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 2px 8px; }
+  .header-left p { font-size: 12px; color: var(--text2); margin-top: 3px; }
+  .accuracy-chip { text-align: center; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 8px 14px; display: none; }
+  .accuracy-chip .num { font-size: 20px; font-weight: 600; }
+  .accuracy-chip .lbl { font-size: 11px; color: var(--text2); }
+
+  /* Nav */
+  .nav { display: flex; gap: 4px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 4px; margin-bottom: 1.25rem; }
+  .nav-btn { flex: 1; padding: 7px 12px; border: none; cursor: pointer; border-radius: 7px; font-size: 13px; font-family: inherit; background: transparent; color: var(--text2); transition: all .15s; }
+  .nav-btn.active { background: var(--accent-bg); color: var(--accent); font-weight: 500; }
+
+  /* Sub tabs */
+  .subtabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 1rem; }
+  .subtab { padding: 8px 16px; border: none; background: none; cursor: pointer; font-size: 13px; font-family: inherit; color: var(--text2); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all .15s; }
+  .subtab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
+
+  /* Forms */
+  .form-group { margin-bottom: 14px; }
+  .form-group label { display: block; font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .04em; }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%; padding: 9px 12px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); font-size: 13px; font-family: inherit; outline: none; transition: border .15s;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--accent); }
+  .form-group select option, .form-group select optgroup { background: var(--surface2); }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 36px 1fr; gap: 8px; align-items: end; margin-bottom: 14px; }
+  .vs { text-align: center; padding-bottom: 10px; font-size: 14px; color: var(--text3); font-weight: 500; }
+
+  /* Buttons */
+  .btn { padding: 10px 18px; border: none; cursor: pointer; border-radius: 8px; font-size: 13px; font-family: inherit; font-weight: 500; transition: all .15s; }
+  .btn-primary { background: var(--accent); color: #fff; width: 100%; }
+  .btn-primary:hover:not(:disabled) { background: #7c9bff; }
+  .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .btn-ghost { background: var(--surface); border: 1px solid var(--border); color: var(--text2); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-danger { background: var(--danger-bg); border: 1px solid var(--danger); color: var(--danger); }
+
+  /* Info box */
+  .info-box { background: var(--accent-bg); border: 1px solid rgba(108,139,255,.25); border-radius: 8px; padding: 10px 14px; font-size: 12px; color: var(--text2); margin-bottom: 1rem; }
+
+  /* Error */
+  .error-msg { color: var(--danger); font-size: 13px; margin-bottom: 8px; }
+
+  /* Spinner */
+  .spinner-wrap { text-align: center; padding: 2rem; }
+  .spinner { display: inline-block; width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Analysis Card */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; margin-top: 1.25rem; }
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; padding-bottom: .875rem; border-bottom: 1px solid var(--border); }
+  .matchup { font-size: 16px; font-weight: 600; }
+  .matchup span { color: var(--text2); font-weight: 400; font-size: 14px; margin: 0 8px; }
+  .conf-badge { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 500; }
+  .conf-Yüksek { background: var(--success-bg); color: var(--success); }
+  .conf-Orta { background: var(--warning-bg); color: var(--warning); }
+  .conf-Düşük { background: var(--danger-bg); color: var(--danger); }
+
+  .prob-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 1rem; }
+  .prob-cell { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px; text-align: center; }
+  .prob-cell .pct { font-size: 20px; font-weight: 600; }
+  .prob-cell .plbl { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .prob-cell.best { border-color: var(--accent); background: var(--accent-bg); }
+  .prob-cell.best .pct { color: var(--accent); }
+
+  .lambda-row { display: flex; gap: 8px; margin-bottom: 1rem; }
+  .lambda-chip { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px; text-align: center; font-size: 12px; color: var(--text2); }
+  .lambda-chip strong { display: block; font-size: 17px; color: var(--text); margin-bottom: 2px; }
+
+  .key-factor { background: var(--surface2); border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0; padding: 8px 12px; font-size: 12px; color: var(--text2); margin-bottom: 1rem; }
+
+  .analysis-text { font-size: 13px; line-height: 1.7; color: var(--text2); }
+
+  /* Score grid */
+  .score-section { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+  .score-section h4 { font-size: 12px; font-weight: 500; color: var(--text2); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 8px; }
+  .score-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+  .score-cell { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 5px 4px; text-align: center; font-size: 11px; }
+  .score-cell .sc { font-weight: 600; color: var(--text); }
+  .score-cell .sp { color: var(--text3); }
+  .score-cell.top3 { border-color: var(--accent); background: var(--accent-bg); }
+  .score-cell.top3 .sc { color: var(--accent); }
+
+  /* History */
+  .history-empty { text-align: center; padding: 3rem 1rem; color: var(--text2); }
+  .history-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; }
+  .hi-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .hi-match { font-weight: 500; font-size: 14px; }
+  .hi-date { font-size: 11px; color: var(--text2); }
+  .hi-probs { display: flex; gap: 6px; margin-bottom: 8px; }
+  .hi-prob { flex: 1; background: var(--surface2); border-radius: 6px; padding: 5px; text-align: center; font-size: 11px; color: var(--text2); }
+  .hi-prob strong { display: block; font-size: 14px; color: var(--text); }
+  .hi-result { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .hi-result-label { font-size: 12px; color: var(--text2); }
+  .result-btn { padding: 4px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface2); color: var(--text2); cursor: pointer; font-size: 12px; font-family: inherit; transition: all .15s; }
+  .result-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .result-btn.selected-win { background: var(--success-bg); border-color: var(--success); color: var(--success); }
+  .result-btn.selected-draw { background: var(--warning-bg); border-color: var(--warning); color: var(--warning); }
+  .result-btn.selected-lose { background: var(--danger-bg); border-color: var(--danger); color: var(--danger); }
+
+  /* Stats */
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1.25rem; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; text-align: center; }
+  .stat-card .sv { font-size: 28px; font-weight: 600; }
+  .stat-card .sl { font-size: 12px; color: var(--text2); margin-top: 3px; }
+
+  /* API Key settings */
+  .settings-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; margin-bottom: 1rem; }
+  .settings-card h3 { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+  .settings-card p { font-size: 12px; color: var(--text2); margin-bottom: 10px; line-height: 1.6; }
+
+  /* Stat row card */
+  .stat-row-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; }
+  .sr-label { font-size: 12px; color: var(--text2); }
+  .sr-val { font-size: 14px; font-weight: 600; color: var(--text); }
+
+  /* Confidence bar */
+  .conf-bar-wrap { margin-bottom: 1rem; }
+  .conf-bar-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text2); margin-bottom: 4px; }
+  .conf-bar-bg { background: var(--surface2); border-radius: 4px; height: 6px; overflow: hidden; }
+  .conf-bar-fill { height: 100%; border-radius: 4px; background: var(--accent); transition: width .6s ease; }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* Fixture buttons */
+  .league-filter-btn { padding: 4px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--text2); cursor: pointer; font-size: 11px; font-family: inherit; transition: all .15s; white-space: nowrap; }
+  .league-filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .league-filter-btn.active { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+  .fixture-btn { padding: 6px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface2); color: var(--text); cursor: pointer; font-size: 12px; font-family: inherit; transition: all .15s; text-align: left; white-space: nowrap; }
+  .fixture-btn:hover { border-color: var(--accent); background: var(--accent-bg); }
+  .fixture-btn .fx-date { font-size: 10px; color: var(--text3); display: block; margin-bottom: 2px; }
+  .fixture-btn .fx-match { font-weight: 500; }
+
+  @media (max-width: 480px) {
+    .prob-grid { grid-template-columns: 1fr 1fr 1fr; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .score-grid { grid-template-columns: repeat(4, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <h1>📊 BetAnaliz <span class="badge">Pro</span></h1>
+      <p>Poisson istatistik modeli ile maç analizi</p>
+    </div>
+    <div class="accuracy-chip" id="accuracyChip">
+      <div class="num" id="accuracyNum">-</div>
+      <div class="lbl">İsabet</div>
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <div class="nav">
+    <button class="nav-btn active" onclick="showPage('analyze')">🔍 Analiz</button>
+    <button class="nav-btn" onclick="showPage('history')">📋 Geçmiş</button>
+    <button class="nav-btn" onclick="showPage('stats')">🏆 İsabet</button>
+    <button class="nav-btn" onclick="showPage('settings')">⚙️ Ayarlar</button>
+  </div>
+
+  <!-- Analyze Page -->
+  <div class="page active" id="page-analyze">
+    <div class="subtabs">
+      <button class="subtab active" onclick="showSubtab('ai')">🤖 AI Analiz</button>
+      <button class="subtab" onclick="showSubtab('manual')">🧮 Manuel</button>
+    </div>
+
+    <!-- AI Tab -->
+    <div id="tab-ai">
+      <div class="info-box">Poisson istatistik modeli ile otomatik analiz. Aşağıdan maç seç veya manuel gir.</div>
+
+      <!-- Güncel Maçlar -->
+      <div style="margin-bottom:1rem">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <label style="font-size:12px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.04em">Yaklaşan Maçlar</label>
+          <div style="display:flex;gap:6px;flex-wrap:wrap" id="league-btns">
+            <button class="league-filter-btn active" onclick="loadFixtures(4399,'FIFA Dünya Kupası 2026',this)">🌍 Dünya Kupası</button>
+            <button class="league-filter-btn" onclick="loadFixtures(4681,'Süper Lig',this)">🇹🇷 Süper Lig</button>
+            <button class="league-filter-btn" onclick="loadFixtures(4328,'Premier League',this)">🏴󠁧󠁢󠁥󠁮󠁧󠁿 PL</button>
+            <button class="league-filter-btn" onclick="loadFixtures(4335,'La Liga',this)">🇪🇸 La Liga</button>
+            <button class="league-filter-btn" onclick="loadFixtures(4331,'Bundesliga',this)">🇩🇪 BL</button>
+            <button class="league-filter-btn" onclick="loadFixtures(4332,'Serie A',this)">🇮🇹 SA</button>
+            <button class="league-filter-btn" onclick="loadFixtures(4480,'Champions League',this)">🏆 UCL</button>
+          </div>
+        </div>
+        <div id="fixtures-list" style="display:flex;flex-wrap:wrap;gap:6px;min-height:40px">
+          <div style="color:var(--text3);font-size:12px;padding:8px">Yükleniyor...</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Lig / Turnuva</label>
+        <select id="ai-league">
+          <option value="">Seç...</option>
+          <optgroup label="🌍 Milli Takım">
+            <option>FIFA Dünya Kupası 2026</option>
+            <option>FIFA DK Elemeleri</option>
+            <option>UEFA EURO</option>
+            <option>UEFA Nations League</option>
+            <option>CONMEBOL Copa América</option>
+            <option>CAF Afrika Kupası</option>
+            <option>Hazırlık Maçı</option>
+          </optgroup>
+          <optgroup label="🇹🇷 Türkiye">
+            <option>Süper Lig</option>
+            <option>TFF 1. Lig</option>
+            <option>Türkiye Kupası</option>
+          </optgroup>
+          <optgroup label="🏆 Avrupa Kulüp">
+            <option>UEFA Champions League</option>
+            <option>UEFA Europa League</option>
+            <option>UEFA Conference League</option>
+          </optgroup>
+          <optgroup label="🌍 Avrupa Ligleri">
+            <option>Premier League</option>
+            <option>La Liga</option>
+            <option>Bundesliga</option>
+            <option>Serie A</option>
+            <option>Ligue 1</option>
+            <option>Eredivisie</option>
+            <option>Primeira Liga</option>
+          </optgroup>
+          <optgroup label="🌎 Diğer">
+            <option>MLS</option>
+            <option>Saudi Pro League</option>
+            <option>Diğer</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <div class="grid2">
+        <div class="form-group" style="margin-bottom:0">
+          <label>1. Takım / Ev</label>
+          <input id="ai-home" placeholder="örn. Galatasaray" onkeydown="if(event.key==='Enter') runAI()">
+        </div>
+        <div class="vs">vs</div>
+        <div class="form-group" style="margin-bottom:0">
+          <label>2. Takım / Dep</label>
+          <input id="ai-away" placeholder="örn. Fenerbahçe" onkeydown="if(event.key==='Enter') runAI()">
+        </div>
+      </div>
+
+      <!-- Oran Girişi -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:14px">
+        <div style="font-size:12px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">📊 İddaa Oranları (opsiyonel)</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+          <div class="form-group" style="margin-bottom:0">
+            <label>MS1 (Ev)</label>
+            <input id="ai-ms1" type="number" step="0.01" placeholder="1.90" oninput="previewOranAnaliz()">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label>MS0 (Beraberlik)</label>
+            <input id="ai-ms0" type="number" step="0.01" placeholder="3.20" oninput="previewOranAnaliz()">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label>MS2 (Dep)</label>
+            <input id="ai-ms2" type="number" step="0.01" placeholder="2.90" oninput="previewOranAnaliz()">
+          </div>
+        </div>
+        <div id="oran-preview" style="margin-top:8px"></div>
+        <div id="odds-status" style="display:none;font-size:12px;color:var(--text2);margin-top:6px;padding:4px 8px;background:var(--surface);border-radius:6px"></div>
+      </div>
+
+      <div class="form-group">
+        <label>Ek not (opsiyonel)</label>
+        <input id="ai-note" placeholder="Eksik oyuncular, önem derecesi...">
+      </div>
+
+      <div class="error-msg" id="ai-error" style="display:none"></div>
+      <button class="btn btn-primary" onclick="runAI()" id="ai-btn">🔍 Analizi Başlat</button>
+
+      <div id="ai-spinner" style="display:none" class="spinner-wrap"><div class="spinner"></div><div style="color:var(--text2);font-size:12px;margin-top:8px">Analiz yapılıyor...</div></div>
+      <div id="ai-result"></div>
+    </div>
+
+    <!-- Manual Tab -->
+    <div id="tab-manual" style="display:none">
+      <div class="info-box">Takım istatistiklerini manuel girerek Poisson modeli ile olasılık hesaplama.</div>
+
+      <div class="grid2">
+        <div class="form-group" style="margin-bottom:0">
+          <label>Ev Takımı</label>
+          <input id="m-home" placeholder="örn. Galatasaray">
+        </div>
+        <div class="vs">vs</div>
+        <div class="form-group" style="margin-bottom:0">
+          <label>Deplasman</label>
+          <input id="m-away" placeholder="örn. Fenerbahçe">
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px">
+        <div class="form-group">
+          <label>Ev – Ort. Atılan Gol</label>
+          <input id="m-hatt" type="number" step="0.01" placeholder="1.80" value="1.80">
+        </div>
+        <div class="form-group">
+          <label>Dep – Ort. Atılan Gol</label>
+          <input id="m-aatt" type="number" step="0.01" placeholder="1.20" value="1.20">
+        </div>
+        <div class="form-group">
+          <label>Ev – Ort. Yenen Gol</label>
+          <input id="m-hyen" type="number" step="0.01" placeholder="1.10" value="1.10">
+        </div>
+        <div class="form-group">
+          <label>Dep – Ort. Yenen Gol</label>
+          <input id="m-ayen" type="number" step="0.01" placeholder="1.50" value="1.50">
+        </div>
+        <div class="form-group">
+          <label>Lig Ort. Gol / Maç</label>
+          <input id="m-lgavg" type="number" step="0.01" placeholder="2.60" value="2.60">
+        </div>
+      </div>
+
+      <div class="error-msg" id="m-error" style="display:none"></div>
+      <button class="btn btn-primary" onclick="runManual()">🧮 Hesapla</button>
+      <div id="m-result"></div>
+    </div>
+  </div>
+
+  <!-- History Page -->
+  <div class="page" id="page-history">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+      <h2 style="font-size:16px;font-weight:600">Analiz Geçmişi</h2>
+      <button class="btn btn-sm btn-danger" onclick="clearHistory()">🗑 Temizle</button>
+    </div>
+    <div id="history-list"></div>
+  </div>
+
+  <!-- Stats Page -->
+  <div class="page" id="page-stats">
+    <h2 style="font-size:16px;font-weight:600;margin-bottom:1rem">İsabet İstatistikleri</h2>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="sv" id="st-total">0</div>
+        <div class="sl">Toplam Analiz</div>
+      </div>
+      <div class="stat-card">
+        <div class="sv" id="st-graded">0</div>
+        <div class="sl">Sonuç Girildi</div>
+      </div>
+      <div class="stat-card">
+        <div class="sv" id="st-correct" style="color:var(--success)">0</div>
+        <div class="sl">Doğru Tahmin</div>
+      </div>
+      <div class="stat-card">
+        <div class="sv" id="st-accuracy">-</div>
+        <div class="sl">İsabet Oranı</div>
+      </div>
+    </div>
+    <div id="stats-detail"></div>
+  </div>
+
+  <!-- Settings Page -->
+  <div class="page" id="page-settings">
+    <div class="settings-card">
+      <h3>🔑 Anthropic API Key</h3>
+      <p>AI analizini kullanmak için Anthropic API key gereklidir. Key yalnızca tarayıcında saklanır, hiçbir yere gönderilmez.<br><br>
+      Key almak için: <strong>console.anthropic.com</strong></p>
+      <div class="form-group">
+        <label>API Key</label>
+        <input id="apikey-input" type="password" placeholder="sk-ant-...">
+      </div>
+      <button class="btn btn-primary" onclick="saveApiKey()">💾 Kaydet</button>
+      <div id="apikey-msg" style="font-size:12px;color:var(--success);margin-top:8px;display:none">✓ Kaydedildi</div>
+    </div>
+
+    <div class="settings-card">
+      <h3>📊 Otomatik Oran (The Odds API)</h3>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:10px">Maç listesinden seçince MS1/MS0/MS2 otomatik dolar.<br>
+      <strong>Ücretsiz key almak için:</strong> <a href="https://the-odds-api.com" target="_blank" style="color:var(--accent)">the-odds-api.com</a> → Sign Up → API key kopyala (ayda 500 istek bedava)</p>
+      <div class="form-group">
+        <label>Odds API Key</label>
+        <div style="display:flex;gap:6px">
+          <input id="oddskey-input" type="text" placeholder="Buraya key yapıştır..." style="flex:1;font-family:monospace;font-size:12px">
+          <button class="btn btn-sm" onclick="testOddsKey()" style="white-space:nowrap">🧪 Test</button>
+        </div>
+      </div>
+      <div id="oddskey-test" style="font-size:12px;margin-bottom:8px;display:none"></div>
+      <button class="btn btn-primary" onclick="saveOddsKey()" style="width:100%">💾 Kaydet</button>
+      <div id="oddskey-msg" style="font-size:12px;color:var(--success);margin-top:8px;display:none">✓ Kaydedildi</div>
+    </div>
+
+    <div class="settings-card">
+      <h3>ℹ️ Hakkında</h3>
+      <p>BetAnaliz Pro, Poisson dağılımı tabanlı istatistik modeli kullanarak futbol maçlarını analiz eder. AI modu Claude API aracılığıyla web araştırması yapar ve gerçek istatistiklere dayalı tahmin üretir.</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ─── State ───────────────────────────────────────────────
+let history = JSON.parse(localStorage.getItem('betanaliz_history') || '[]')
+
+function saveHistory() {
+  localStorage.setItem('betanaliz_history', JSON.stringify(history))
+}
+
+function getApiKey() {
+  return localStorage.getItem('betanaliz_apikey') || ''
+}
+
+function getOddsKey() {
+  return localStorage.getItem('betanaliz_oddskey') || ''
+}
+
+async function testOddsKey() {
+  const key = document.getElementById('oddskey-input').value.trim()
+  const el = document.getElementById('oddskey-test')
+  el.style.display = 'block'
+  if (!key) { el.style.color = 'var(--danger)'; el.textContent = '❌ Key boş'; return }
+  el.style.color = 'var(--text2)'; el.textContent = '⏳ Test ediliyor...'
+  try {
+    const r = await fetch(`/api/odds?path=sports&apiKey=${key}`)
+    const data = await r.json()
+    if (r.ok && Array.isArray(data)) {
+      el.style.color = 'var(--success)'
+      el.textContent = `✅ Key geçerli! ${data.length} lig erişilebilir.`
+    } else {
+      el.style.color = 'var(--danger)'
+      el.textContent = `❌ Geçersiz key (${data.message || r.status})`
+    }
+  } catch {
+    el.style.color = 'var(--danger)'
+    el.textContent = '❌ Bağlantı hatası'
+  }
+}
+
+function saveOddsKey() {
+  const val = document.getElementById('oddskey-input').value.trim()
+  localStorage.setItem('betanaliz_oddskey', val)
+  const msg = document.getElementById('oddskey-msg')
+  msg.style.display = 'block'
+  setTimeout(() => msg.style.display = 'none', 2000)
+}
+
+// Odds API lig slug'ları
+// Türkçe → İngilizce (Sofascore araması için)
+function toEnglish(name) {
+  if (!name) return name
+  const low = name.toLowerCase().trim()
+  for (const [en, tr] of Object.entries(TR_NAMES)) {
+    if (tr.toLowerCase() === low) return en.charAt(0).toUpperCase() + en.slice(1)
+  }
+  return name
+}
+
+// Sofascore üzerinden ücretsiz oran çekme (key gerektirmez)
+async function fetchOddsForMatch(home, away) {
+  try {
+    const fracToDecimal = frac => {
+      const parts = frac.split('/')
+      if (parts.length !== 2) return null
+      const val = +((+parts[0] / +parts[1]) + 1).toFixed(2)
+      return isNaN(val) ? null : val
+    }
+
+    // Sofascore CORS'u engeller — allorigins proxy kullan
+    const sfFetch = async url => {
+      // Önce direkt dene
+      try {
+        const r = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } })
+        if (r.ok) return r.json()
+      } catch {}
+      // CORS proxy ile dene
+      const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`
+      const r = await fetch(proxy)
+      const d = await r.json()
+      return JSON.parse(d.contents)
+    }
+
+    // 1. Maç ara
+    const homeEn = toEnglish(home)
+    const awayEn = toEnglish(away)
+    const q = `${homeEn} ${awayEn}`
+    const searchData = await sfFetch(`https://api.sofascore.com/api/v1/search/events?q=${encodeURIComponent(q)}`)
+
+    // Sofascore search sonuçları — events veya results altında olabilir
+    const events = searchData?.events || searchData?.results?.map(r => r.entity) || []
+    const norm = s => (s || '').toLowerCase().replace(/[^a-z]/g, '')
+    const homeN = norm(homeEn), awayN = norm(awayEn)
+
+    // Başlamamış futbol maçını bul
+    const ev = events.find(e => {
+      if (!e?.homeTeam || !e?.awayTeam) return false
+      const h = norm(e.homeTeam.name), a = norm(e.awayTeam.name)
+      const statusOk = !e.status || e.status.type === 'notstarted' || e.status.type === 'inprogress'
+      return statusOk && (h.includes(homeN) || homeN.includes(h)) && (a.includes(awayN) || awayN.includes(a))
+    })
+    if (!ev) return null
+
+    // 2. Oranları çek
+    const oddsData = await sfFetch(`https://api.sofascore.com/api/v1/event/${ev.id}/odds/1/featured`)
+    const markets = oddsData?.featuredMarkets || oddsData?.markets || []
+    const ftMarket = markets.find(m => m.marketName === 'Full time' || m.marketName === '1X2' || m.marketId === 1)
+    if (!ftMarket?.choices?.length) return null
+
+    const choices = ftMarket.choices
+    const getOdd = name => {
+      const c = choices.find(c => c.name === name)
+      if (!c) return null
+      return fracToDecimal(c.fractionalValue || c.initialFractionalValue || '')
+    }
+
+    const ms1 = getOdd('1'), ms0 = getOdd('X'), ms2 = getOdd('2')
+    if (!ms1 || !ms0 || !ms2) return null
+    return { ms1: ms1.toFixed(2), ms0: ms0.toFixed(2), ms2: ms2.toFixed(2), source: 'Sofascore' }
+  } catch { return null }
+}
+
+// ─── Navigation ──────────────────────────────────────────
+function showPage(p) {
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'))
+  document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'))
+  document.getElementById('page-' + p).classList.add('active')
+  event.target.classList.add('active')
+  if (p === 'history') renderHistory()
+  if (p === 'stats') renderStats()
+  if (p === 'settings') {
+    const ak = document.getElementById('apikey-input')
+    const ok = document.getElementById('oddskey-input')
+    if (ak) ak.value = getApiKey()
+    if (ok) ok.value = getOddsKey()
+  }
+}
+
+function showSubtab(t) {
+  document.querySelectorAll('.subtab').forEach(el => el.classList.remove('active'))
+  event.target.classList.add('active')
+  document.getElementById('tab-ai').style.display = t === 'ai' ? 'block' : 'none'
+  document.getElementById('tab-manual').style.display = t === 'manual' ? 'block' : 'none'
+}
+
+// ─── Poisson ─────────────────────────────────────────────
+function poissonPmf(lambda, k) {
+  let logP = k * Math.log(lambda) - lambda
+  for (let i = 1; i <= k; i++) logP -= Math.log(i)
+  return Math.exp(logP)
+}
+
+function computeMatchProbs(lambdaH, lambdaA, maxGoals = 8) {
+  let homeWin = 0, draw = 0, awayWin = 0
+  const scores = []
+  for (let h = 0; h <= maxGoals; h++) {
+    for (let a = 0; a <= maxGoals; a++) {
+      const p = poissonPmf(lambdaH, h) * poissonPmf(lambdaA, a)
+      if (h > a) homeWin += p
+      else if (h === a) draw += p
+      else awayWin += p
+      if (h <= 5 && a <= 5) scores.push({ h, a, p })
+    }
+  }
+  scores.sort((x, y) => y.p - x.p)
+  return { homeWin: +(homeWin * 100).toFixed(1), draw: +(draw * 100).toFixed(1), awayWin: +(awayWin * 100).toFixed(1), topScores: scores.slice(0, 9) }
+}
+
+// ─── Takım Gücü Veritabanı ───────────────────────────────
+// İngilizce → Türkçe takım adı çevirisi (API'den gelen isimler için)
+const TR_NAMES = {
+  // Milli takımlar
+  'argentina': 'Arjantin', 'brazil': 'Brezilya', 'france': 'Fransa', 'spain': 'İspanya',
+  'germany': 'Almanya', 'england': 'İngiltere', 'netherlands': 'Hollanda', 'portugal': 'Portekiz',
+  'belgium': 'Belçika', 'italy': 'İtalya', 'uruguay': 'Uruguay', 'colombia': 'Kolombiya',
+  'mexico': 'Meksika', 'usa': 'ABD', 'united states': 'ABD', 'turkey': 'Türkiye',
+  'japan': 'Japonya', 'australia': 'Avustralya', 'morocco': 'Fas', 'senegal': 'Senegal',
+  'nigeria': 'Nijerya', 'ghana': 'Gana', 'cameroon': 'Kamerun', 'ecuador': 'Ekvador',
+  'peru': 'Peru', 'chile': 'Şili', 'paraguay': 'Paraguay', 'venezuela': 'Venezuela',
+  'bolivia': 'Bolivya', 'iran': 'İran', 'south korea': 'Güney Kore', 'korea republic': 'Güney Kore',
+  'saudi arabia': 'Suudi Arabistan', 'new zealand': 'Yeni Zelanda', 'croatia': 'Hırvatistan',
+  'denmark': 'Danimarka', 'sweden': 'İsveç', 'norway': 'Norveç', 'switzerland': 'İsviçre',
+  'austria': 'Avusturya', 'poland': 'Polonya', 'czech republic': 'Çek Cumhuriyeti',
+  'hungary': 'Macaristan', 'romania': 'Romanya', 'ukraine': 'Ukrayna', 'serbia': 'Sırbistan',
+  'greece': 'Yunanistan', 'scotland': 'İskoçya', 'wales': 'Galler', 'russia': 'Rusya',
+  'egypt': 'Mısır', 'algeria': 'Cezayir', 'tunisia': 'Tunus', 'ivory coast': 'Fildişi Sahili',
+  'costa rica': 'Kosta Rika', 'panama': 'Panama', 'honduras': 'Honduras', 'el salvador': 'El Salvador',
+  'qatar': 'Katar', 'iraq': 'Irak', 'israel': 'İsrail', 'canada': 'Kanada',
+  'slovakia': 'Slovakya', 'slovenia': 'Slovenya', 'albania': 'Arnavutluk',
+  'cape verde': 'Yeşil Burun Adaları', 'cabo verde': 'Yeşil Burun Adaları',
+  'bohemians': 'Bohemians', "st patrick's athletic": "St Patrick's Athletic",
+  // Kulüpler - İspanya
+  'real madrid': 'Real Madrid', 'barcelona': 'Barcelona', 'atletico madrid': 'Atletico Madrid',
+  'sevilla': 'Sevilla', 'real sociedad': 'Real Sociedad', 'villarreal': 'Villarreal',
+  'athletic bilbao': 'Athletic Bilbao', 'real betis': 'Betis',
+  // Kulüpler - İngiltere
+  'manchester city': 'Manchester City', 'arsenal': 'Arsenal', 'liverpool': 'Liverpool',
+  'chelsea': 'Chelsea', 'manchester united': 'Manchester United', 'tottenham': 'Tottenham',
+  'tottenham hotspur': 'Tottenham', 'newcastle': 'Newcastle', 'newcastle united': 'Newcastle',
+  'aston villa': 'Aston Villa', 'west ham': 'West Ham', 'brighton': 'Brighton',
+  // Kulüpler - Almanya
+  'bayern munich': 'Bayern Münih', 'fc bayern munich': 'Bayern Münih',
+  'borussia dortmund': 'Borussia Dortmund', 'bayer leverkusen': 'Bayer Leverkusen',
+  'rb leipzig': 'RB Leipzig', 'eintracht frankfurt': 'Eintracht Frankfurt',
+  // Kulüpler - İtalya
+  'inter milan': 'Inter Milan', 'internazionale': 'Inter Milan', 'juventus': 'Juventus',
+  'ac milan': 'Milan', 'napoli': 'Napoli', 'as roma': 'Roma', 'lazio': 'Lazio', 'atalanta': 'Atalanta',
+  // Kulüpler - Fransa
+  'paris saint-germain': 'PSG', 'psg': 'PSG', 'marseille': 'Marsilya',
+  'monaco': 'Monaco', 'lille': 'Lille',
+  // Kulüpler - Türkiye
+  'galatasaray': 'Galatasaray', 'fenerbahce': 'Fenerbahçe', 'besiktas': 'Beşiktaş',
+  'trabzonspor': 'Trabzonspor', 'istanbul basaksehir': 'Başakşehir', 'basaksehir': 'Başakşehir',
+}
+
+function toTurkish(name) {
+  if (!name) return name
+  const low = name.toLowerCase().trim()
+  if (TR_NAMES[low]) return TR_NAMES[low]
+  // Kısmi eşleşme
+  for (const [en, tr] of Object.entries(TR_NAMES)) {
+    if (low.includes(en) || en.includes(low)) return tr
+  }
+  // Zaten Türkçe veya bilinmiyor — olduğu gibi döndür
+  return name
+}
+
+const TEAM_STRENGTH = {
+  // Türkiye Süper Lig
+  'galatasaray': 1.85, 'fenerbahçe': 1.80, 'beşiktaş': 1.65, 'trabzonspor': 1.55,
+  'başakşehir': 1.45, 'sivasspor': 1.30, 'adana demirspor': 1.30, 'alanyaspor': 1.25,
+  'konyaspor': 1.20, 'antalyaspor': 1.20, 'kasımpaşa': 1.15, 'kayserispor': 1.15,
+  'gaziantep': 1.15, 'hatayspor': 1.10, 'rizespor': 1.10, 'ankaragücü': 1.10,
+  // İspanya
+  'real madrid': 2.20, 'barcelona': 2.15, 'atletico madrid': 1.85, 'sevilla': 1.65,
+  'real sociedad': 1.60, 'villarreal': 1.60, 'athletic bilbao': 1.55, 'betis': 1.50,
+  // İngiltere
+  'manchester city': 2.25, 'arsenal': 2.05, 'liverpool': 2.10, 'chelsea': 1.90,
+  'manchester united': 1.85, 'tottenham': 1.80, 'newcastle': 1.70, 'aston villa': 1.70,
+  // Almanya
+  'bayern münih': 2.30, 'borussia dortmund': 2.00, 'bayer leverkusen': 1.95,
+  'rb leipzig': 1.80, 'eintracht frankfurt': 1.65,
+  // İtalya
+  'inter milan': 2.05, 'juventus': 1.95, 'milan': 1.90, 'napoli': 1.95,
+  'roma': 1.75, 'lazio': 1.70, 'atalanta': 1.80,
+  // Fransa
+  'psg': 2.20, 'marsilya': 1.70, 'monaco': 1.65, 'lille': 1.55,
+  // Milli Takımlar
+  'arjantin': 2.05, 'brezilya': 2.00, 'fransa': 1.95, 'portekiz': 1.85,
+  'ispanya': 1.90, 'almanya': 1.80, 'ingiltere': 1.80, 'hollanda': 1.75,
+  'belçika': 1.70, 'italya': 1.75, 'uruguay': 1.65, 'kolombiya': 1.60,
+  'meksika': 1.55, 'japonya': 1.55, 'fas': 1.50, 'senegal': 1.50,
+  'güney kore': 1.50, 'türkiye': 1.50, 'peru': 1.50, 'şili': 1.50,
+  'hırvatistan': 1.65, 'danimarka': 1.60, 'isviçre': 1.60, 'avusturya': 1.55,
+  'polonya': 1.50, 'isveç': 1.50, 'ukrayna': 1.55, 'sırbistan': 1.50,
+  'abd': 1.45, 'kanada': 1.45, 'avustralya': 1.45, 'suudi arabistan': 1.40,
+  'nijerya': 1.45, 'ekvador': 1.45, 'iran': 1.40, 'ghana': 1.40,
+  'kamerun': 1.40, 'paraguay': 1.40, 'venezüela': 1.35, 'bolivya': 1.25,
+  'yeni zelanda': 1.30, 'katar': 1.35, 'tunus': 1.45, 'mısır': 1.45,
+  'cezayir': 1.45, 'yeşil burun adaları': 1.35,
+}
+
+function trLower(s) {
+  // JS'de "İ".toLowerCase() = "i̇" (U+0307 birleşik nokta), "ı" değil — manuel düzelt
+  return (s || '')
+    .replace(/İ/g, 'i').replace(/I/g, 'ı')
+    .replace(/Ş/g, 'ş').replace(/Ğ/g, 'ğ')
+    .replace(/Ü/g, 'ü').replace(/Ö/g, 'ö').replace(/Ç/g, 'ç')
+    .toLowerCase().normalize('NFC').trim()
+}
+
+function getStrength(name) {
+  const tr = toTurkish(name)
+  const key = trLower(tr)
+  if (TEAM_STRENGTH[key]) return TEAM_STRENGTH[key]
+  // Kısmi eşleşme
+  for (const [k, v] of Object.entries(TEAM_STRENGTH)) {
+    if (key.includes(k) || k.includes(key)) return v
+  }
+  return 1.35
+}
+
+function seededRandom(seed) {
+  let x = Math.sin(seed) * 10000
+  return x - Math.floor(x)
+}
+
+function smartAnalysis(home, away, league, note) {
+  const hStr = getStrength(home)
+  const aStr = getStrength(away)
+  const seed = home.length * 7 + away.length * 13 + (league || '').length * 3
+  const sr = n => seededRandom(seed + n)
+
+  // ── Gol Beklentisi (Poisson lambda) ──
+  const homeAdv = 1.12
+  const lambdaH = +(hStr * homeAdv * (1.35 / aStr) * (0.90 + sr(0) * 0.18)).toFixed(2)
+  const lambdaA = +(aStr * (1.35 / hStr) * (0.82 + sr(1) * 0.18)).toFixed(2)
+  const totalGoals = lambdaH + lambdaA
+
+  // ── Alt/Üst 2.5 ──
+  let under25 = 0
+  for (let h = 0; h <= 2; h++) for (let a = 0; a <= 2 - h; a++) under25 += poissonPmf(lambdaH, h) * poissonPmf(lambdaA, a)
+  const over25 = +((1 - under25) * 100).toFixed(1)
+  const under25Pct = +(under25 * 100).toFixed(1)
+
+  // ── KG Var ──
+  const bttsNo = (1 - (1 - Math.exp(-lambdaH))) * 1 + 1 * (1 - (1 - Math.exp(-lambdaA)))
+  const noScoreH = Math.exp(-lambdaH)
+  const noScoreA = Math.exp(-lambdaA)
+  const btts = +((1 - noScoreH) * (1 - noScoreA) * 100).toFixed(1)
+  const noBtts = +(100 - btts).toFixed(1)
+
+  // ── Korner Tahmini ──
+  const baseCorners = 10 + (hStr + aStr) * 1.2
+  const cornersH = +(baseCorners * (hStr / (hStr + aStr)) * (0.90 + sr(10) * 0.20)).toFixed(1)
+  const cornersA = +(baseCorners * (aStr / (hStr + aStr)) * (0.88 + sr(11) * 0.20)).toFixed(1)
+  const cornersTotal = +(cornersH + cornersA).toFixed(1)
+  const cornersOver9 = cornersTotal >= 9.5 ? +(55 + sr(12) * 25).toFixed(0) : +(30 + sr(12) * 25).toFixed(0)
+
+  // ── Kart Beklentisi ──
+  const totalCards = +(3.2 + (Math.abs(hStr - aStr) * 1.5) * (0.85 + sr(13) * 0.30)).toFixed(1)
+  const yellowCards = +(totalCards * 0.82).toFixed(1)
+  const redCardPct = +(8 + sr(14) * 12).toFixed(0)
+
+  // ── Sürpriz / Alt Üst Faktörü ──
+  const diff = Math.abs(hStr - aStr)
+  const upsetPct = diff > 0.5 ? +(8 + sr(15) * 12).toFixed(0)
+    : diff > 0.25 ? +(18 + sr(15) * 15).toFixed(0)
+    : +(30 + sr(15) * 20).toFixed(0)
+  const upsetLevel = upsetPct >= 40 ? 'Yüksek' : upsetPct >= 22 ? 'Orta' : 'Düşük'
+  const upsetColor = upsetPct >= 40 ? 'var(--danger)' : upsetPct >= 22 ? 'var(--warning)' : 'var(--success)'
+
+  // ── İlk Yarı Tahmini ──
+  const ht_lambdaH = +(lambdaH * 0.45).toFixed(2)
+  const ht_lambdaA = +(lambdaA * 0.45).toFixed(2)
+  const htProbs = computeMatchProbs(ht_lambdaH, ht_lambdaA)
+
+  // ── Güven ──
+  const confidence = diff > 0.45 ? 'Yüksek' : diff > 0.18 ? 'Orta' : 'Düşük'
+  const stronger = hStr >= aStr ? home : away
+
+  // ── Kilit Faktör ──
+  const keyFactors = [
+    `${home}'ın ev sahibi avantajı ve baskı oyunu belirleyici olabilir`,
+    `Güç farkı (${(diff*100).toFixed(0)} puan) sonucu şekillendirecek ana etken`,
+    `${stronger}'ın bireysel kalite üstünlüğü fark yaratabilir`,
+    `Orta alan kontrolü ve ikinci toplar bu maçın kilit noktası`,
+    `Savunma organizasyonu ve set pası verimliliği sonucu belirleyecek`,
+    `Kontr atak etkinliği ve hız farkı avantaj sağlayabilir`,
+  ]
+  const keyFactor = keyFactors[Math.floor(sr(6) * keyFactors.length)]
+
+  // ── Detaylı Analiz Metni — istatistiklere göre dinamik ──
+  const pick = (arr, n) => arr[Math.floor(sr(n) * arr.length)]
+
+  // Güç farkına göre farklı havuzlar
+  const bigGap = diff > 0.40   // Büyük fark
+  const midGap = diff > 0.18   // Orta fark
+  const balanced = diff <= 0.18 // Dengeli
+
+  // Ev sahibi için cümleler — gücüne göre
+  const homeDesc = hStr > 1.90 ? pick([
+    `son dönemde tutarlı performansıyla ligde iddialı bir çizgi yakalamış durumda`,
+    `gol yollarında oldukça verimli; bu sezon attığı gollerle dikkat çekiyor`,
+    `kendi evinde çok güçlü; iç saha maçlarında nadir puan kaybediyor`,
+    `özellikle kanat oyunundaki kalitesiyle rakiplerin savunmasını zorluyor`,
+  ], 2) : hStr > 1.55 ? pick([
+    `dengeli bir kadro yapısına sahip; hem savunma hem hücumda katkı sunabiliyor`,
+    `iç sahada üretken bir oyun sergiliyor; rakibini sıkıştırmakta başarılı`,
+    `motivasyon ve disiplin açısından güvenilir bir görüntü çiziyor`,
+    `kritik anlarda kolektif oyunuyla fark yaratabilen bir takım profili taşıyor`,
+  ], 2) : pick([
+    `kendi evinde bile üretkenlikte sıkıntı yaşıyor; goller genelde geliyor`,
+    `kadro kalitesi sınırlı olsa da düzensiz anlarda rakibine sürpriz yapabiliyor`,
+    `pozisyon üretemese de savunmada sert bir blok oluşturmaya çalışıyor`,
+    `fiziksel güç ve ikinci toplarla tutunmaya çalışan bir oyun anlayışı benimsiyor`,
+  ], 2)
+
+  // Deplasman için cümleler — gücüne ve duruma göre
+  const awayDesc = aStr > 1.90 ? pick([
+    `deplasmanda da üretken; uzakta oynadığı maçlarda puan bırakmıyor`,
+    `bireysel kalitesi yüksek; rakip sahasında da oyun kurmayı başarıyor`,
+    `baskı altında bile topla oynamayı tercih eden disiplinli bir yapı sergiliyor`,
+    `hücum hattındaki yaratıcılığıyla rakip kaleyi sürekli tehdit ediyor`,
+  ], 3) : aStr > 1.55 ? pick([
+    `deplasmanda temkinli başlayıp zamanla ritmini bulmaya çalışıyor`,
+    `savunmada sağlamlığını koruyarak kontr atakla tehlike arayışında`,
+    `fiziksel olarak güçlü; uzun toplarda ve sert mücadelelerde etkili`,
+    `rakip sahada fazla pozisyon vermeden minimal riskle oynamayı tercih ediyor`,
+  ], 3) : pick([
+    `deplasman sicili zayıf; rakip sahada savunmayı bile korumakta güçlük çekiyor`,
+    `yoğun maç takvimiyle güç kaybeden bir kadro; bu maçta yorgunluk faktörü önemli`,
+    `deplasmanda çok az pozisyon üretiyor; goller büyük ölçüde standart duran toplardan geliyor`,
+    `puan için değil, mümkünse en az golle sahadan çıkmak için oynayacak`,
+  ], 3)
+
+  // Maç senaryosu — gol beklentisi ve güç farkına göre
+  const scenarioLines = []
+
+  if (bigGap) {
+    scenarioLines.push(`${stronger} bu karşılaşmada belirgin ${(diff*100).toFixed(0)} puanlık güç üstünlüğüyle çıkıyor.`)
+    scenarioLines.push(`Beklenen toplam gol ${totalGoals.toFixed(1)} ile ${totalGoals > 2.5 ? 'gollü bir maç öngörülüyor' : 'düşük tempolu bir kapışma bekleniyor'}.`)
+    scenarioLines.push(`Favori ${stronger} ilk yarıda tempo belirleyecek; karşı taraf ${totalGoals < 2.0 ? 'kapıyı kapatmaya' : 'en az bir gol bulmaya'} çalışacak.`)
+  } else if (midGap) {
+    scenarioLines.push(`${stronger} kâğıt üzerinde öne çıkıyor olsa da rakibini hafife alamaz.`)
+    scenarioLines.push(`Toplam ${totalGoals.toFixed(1)} gol beklentisi ve %${btts} KG Var ihtimali orta ağırlıklı bir maça işaret ediyor.`)
+    scenarioLines.push(btts > 55
+      ? `İki tarafın da gol ağını havalandırması ihtimal dahilinde.`
+      : `${stronger}'ın savunmayı önce sağlama alması bekleniyor.`)
+  } else {
+    scenarioLines.push(`Güç değerleri birbirine çok yakın; bu maçı kâğıt üzerinde kazanan tarafı seçmek son derece güç.`)
+    scenarioLines.push(`Toplam gol beklentisi ${totalGoals.toFixed(1)}; ${totalGoals < 2.2 ? 'az gollü, kilitli bir maç olası' : 'her iki taraf da gol arayışında olacak'}.`)
+    scenarioLines.push(`Sahaya çıkış motivasyonu ve taktiksel düzen belirleyici olacak.`)
+  }
+
+  // Özel vurgular
+  const highlights = []
+  if (cornersTotal >= 12) highlights.push(`Korner beklentisi yüksek (${cornersTotal}); standart duran toplar maç sonucunu etkileyebilir.`)
+  else if (cornersTotal <= 7) highlights.push(`Düşük korner beklentisi (${cornersTotal}); kanat oyunu sınırlı kalacak.`)
+
+  if (totalCards >= 5) highlights.push(`Sert geçmesi beklenen maçta kart sayısı yüksek (${totalCards} bekleniyor); erken kartlar dengeleri değiştirebilir.`)
+
+  if (upsetPct >= 40) highlights.push(`Sürpriz faktörü %${upsetPct} ile gerçekçi; ${stronger === home ? away : home}'nın puan alması imkânsız değil.`)
+
+  if (note) highlights.push(`Ek not: ${note}.`)
+
+  const analysis = [
+    league ? `【${league}】` : '',
+    `${home}, ${homeDesc}. ${away} ise ${awayDesc}.`,
+    scenarioLines.join(' '),
+    highlights.join(' '),
+  ].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim()
+
+  return {
+    lambdaH, lambdaA, confidence, keyFactor, analysis,
+    over25, under25Pct, btts, noBtts,
+    cornersH, cornersA, cornersTotal, cornersOver9,
+    yellowCards, totalCards, redCardPct,
+    upsetPct, upsetLevel, upsetColor,
+    htProbs,
+  }
+}
+
+// ─── AI Analysis ─────────────────────────────────────────
+async function runAI() {
+  const home = document.getElementById('ai-home').value.trim()
+  const away = document.getElementById('ai-away').value.trim()
+  const league = document.getElementById('ai-league').value
+  const note = document.getElementById('ai-note').value.trim()
+  const errEl = document.getElementById('ai-error')
+
+  if (!home || !away) { showError('ai-error', 'Lütfen iki takımı da girin.'); return }
+  errEl.style.display = 'none'
+
+  document.getElementById('ai-btn').disabled = true
+  document.getElementById('ai-spinner').style.display = 'block'
+  document.getElementById('ai-result').innerHTML = ''
+
+  // Gerçekçi analiz gecikmesi simülasyonu
+  await new Promise(r => setTimeout(r, 1200 + Math.random() * 800))
+
+  try {
+    const ms1 = parseFloat(document.getElementById('ai-ms1').value) || null
+    const ms0 = parseFloat(document.getElementById('ai-ms0').value) || null
+    const ms2 = parseFloat(document.getElementById('ai-ms2').value) || null
+
+    const parsed = smartAnalysis(home, away, league, note)
+    let probs = computeMatchProbs(parsed.lambdaH, parsed.lambdaA)
+    let lambdaH = parsed.lambdaH
+    let lambdaA = parsed.lambdaA
+
+    // Oranlar girilmişse → gerçek piyasa olasılıklarını kullan (overround temizle)
+    if (ms1 && ms0 && ms2) {
+      const rawH = 1 / ms1, rawD = 1 / ms0, rawA = 1 / ms2
+      const total = rawH + rawD + rawA        // overround (genelde ~1.05-1.10)
+      const pH = rawH / total                 // gerçek ev kazanma olasılığı
+      const pD = rawD / total
+      const pA = rawA / total
+
+      // Oranlardan türetilen olasılıkları direkt göster
+      probs = {
+        ...probs,
+        homeWin: +(pH * 100).toFixed(1),
+        draw: +(pD * 100).toFixed(1),
+        awayWin: +(pA * 100).toFixed(1),
+      }
+
+      // Lambdaları da oranlara göre kalibre et (skor tahmini için)
+      // Ortalama gol beklentisi: piyasadan çıkar (MS0 düşükse az gol, yüksekse çok gol)
+      const expectedGoals = ms0 < 3.0 ? 2.1 : ms0 < 3.5 ? 2.5 : ms0 < 4.0 ? 2.8 : 3.2
+      lambdaH = +(expectedGoals * (pH + 0.5 * pD)).toFixed(2)
+      lambdaA = +(expectedGoals * (pA + 0.5 * pD)).toFixed(2)
+      // Poisson skorlarını yeni lambdalarla yeniden hesapla
+      const newProbs = computeMatchProbs(lambdaH, lambdaA)
+      probs = { ...probs, topScores: newProbs.topScores }
+    }
+
+    const item = {
+      id: Date.now(), home, away, league, note,
+      lambdaH, lambdaA,
+      ms1, ms0, ms2,
+      ...probs,
+      analysis: parsed.analysis,
+      confidence: ms1 ? 'Yüksek' : parsed.confidence,
+      keyFactor: ms1 ? `Piyasa oranlarından türetildi (overround: %${(((1/ms1)+(1/ms0)+(1/ms2)-1)*100).toFixed(1)})` : parsed.keyFactor,
+      date: new Date().toLocaleDateString('tr-TR'),
+      result: null,
+    }
+
+    history.unshift(item)
+    saveHistory()
+    updateAccuracyChip()
+    document.getElementById('ai-result').innerHTML = buildCard(item)
+
+  } catch (e) {
+    showError('ai-error', 'Hata: ' + e.message)
+  }
+
+  document.getElementById('ai-btn').disabled = false
+  document.getElementById('ai-spinner').style.display = 'none'
+}
+
+// ─── Manual Analysis ─────────────────────────────────────
+function runManual() {
+  const home = document.getElementById('m-home').value.trim()
+  const away = document.getElementById('m-away').value.trim()
+  const hAtt = parseFloat(document.getElementById('m-hatt').value)
+  const aAtt = parseFloat(document.getElementById('m-aatt').value)
+  const hYen = parseFloat(document.getElementById('m-hyen').value)
+  const aYen = parseFloat(document.getElementById('m-ayen').value)
+  const lgAvg = parseFloat(document.getElementById('m-lgavg').value)
+
+  if (!home || !away) { showError('m-error', 'Takım isimlerini girin.'); return }
+  if (isNaN(hAtt) || isNaN(aAtt) || isNaN(hYen) || isNaN(aYen) || isNaN(lgAvg)) { showError('m-error', 'Tüm sayısal alanları doldurun.'); return }
+
+  document.getElementById('m-error').style.display = 'none'
+
+  const lambdaH = (hAtt / lgAvg) * (aYen / lgAvg) * lgAvg
+  const lambdaA = (aAtt / lgAvg) * (hYen / lgAvg) * lgAvg
+  const probs = computeMatchProbs(lambdaH, lambdaA)
+
+  const item = {
+    id: Date.now(), home, away, league: 'Manuel', note: '',
+    lambdaH: +lambdaH.toFixed(2), lambdaA: +lambdaA.toFixed(2),
+    ...probs,
+    analysis: `Manuel hesaplama. Ev lambda: ${lambdaH.toFixed(2)}, Deplasman lambda: ${lambdaA.toFixed(2)}. Poisson modeline göre olasılıklar hesaplanmıştır.`,
+    confidence: lambdaH > lambdaA + 0.5 ? 'Yüksek' : lambdaA > lambdaH + 0.5 ? 'Yüksek' : 'Orta',
+    keyFactor: 'Manuel istatistik girişi',
+    date: new Date().toLocaleDateString('tr-TR'),
+    result: null,
+  }
+
+  history.unshift(item)
+  saveHistory()
+  updateAccuracyChip()
+  document.getElementById('m-result').innerHTML = buildCard(item)
+}
+
+// ─── Öneri Kutucukları ────────────────────────────────────
+function buildRecommendations(item) {
+  const tips = []
+
+  // Maç sonucu
+  const best = item.homeWin >= item.draw && item.homeWin >= item.awayWin ? 'home'
+    : item.draw >= item.homeWin && item.draw >= item.awayWin ? 'draw' : 'away'
+  const resultMap = { home: { label: `${item.home} Kazanır`, pct: item.homeWin }, draw: { label: 'Beraberlik', pct: item.draw }, away: { label: `${item.away} Kazanır`, pct: item.awayWin } }
+  const r = resultMap[best]
+  tips.push({ label: r.label, pct: r.pct, icon: '🏆', strong: r.pct >= 50 })
+
+  // Alt/Üst
+  if (item.over25 != null) {
+    const overWin = item.over25 > item.under25Pct
+    tips.push({ label: overWin ? 'Üst 2.5 Gol' : 'Alt 2.5 Gol', pct: overWin ? item.over25 : item.under25Pct, icon: '⚽', strong: Math.max(item.over25, item.under25Pct) >= 55 })
+  }
+
+  // KG
+  if (item.btts != null) {
+    const bttsWin = item.btts > item.noBtts
+    tips.push({ label: bttsWin ? 'KG Var' : 'KG Yok', pct: bttsWin ? item.btts : item.noBtts, icon: '🥅', strong: Math.max(item.btts, item.noBtts) >= 55 })
+  }
+
+  // Korner
+  if (item.cornersTotal != null) {
+    const overCorner = item.cornersTotal >= 9.5
+    tips.push({ label: overCorner ? 'Korner Üst 9.5' : 'Korner Alt 9.5', pct: item.cornersOver9, icon: '🚩', strong: item.cornersOver9 >= 60 })
+  }
+
+  // Sürpriz
+  if (item.upsetPct != null) {
+    const noUpset = 100 - item.upsetPct
+    tips.push({ label: item.upsetPct < 25 ? 'Sürpriz Yok' : 'Sürpriz Riski', pct: item.upsetPct < 25 ? noUpset : item.upsetPct, icon: '⚡', strong: false, warn: item.upsetPct >= 30 })
+  }
+
+  // İlk yarı
+  if (item.htProbs) {
+    const htBest = item.htProbs.homeWin >= item.htProbs.draw && item.htProbs.homeWin >= item.htProbs.awayWin ? { label: `IY ${item.home.split(' ')[0]}`, pct: item.htProbs.homeWin }
+      : item.htProbs.draw >= item.htProbs.awayWin ? { label: 'IY Beraberlik', pct: item.htProbs.draw }
+      : { label: `IY ${item.away.split(' ')[0]}`, pct: item.htProbs.awayWin }
+    tips.push({ label: htBest.label, pct: htBest.pct, icon: '1️⃣', strong: htBest.pct >= 45 })
+  }
+
+  // Kart
+  if (item.totalCards != null) {
+    const overCards = item.totalCards >= 3.5
+    tips.push({ label: overCards ? 'Kart Üst 3.5' : 'Kart Alt 3.5', pct: overCards ? 60 : 55, icon: '🟨', strong: false })
+  }
+
+  return `
+  <div style="margin-bottom:1rem">
+    <div style="font-size:12px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">En Olası Durumlar</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px">
+      ${tips.map(t => {
+        const bg = t.warn ? 'var(--warning-bg)' : t.strong ? 'var(--success-bg)' : 'var(--surface2)'
+        const border = t.warn ? 'var(--warning)' : t.strong ? 'var(--success)' : 'var(--border)'
+        const color = t.warn ? 'var(--warning)' : t.strong ? 'var(--success)' : 'var(--text2)'
+        return `<div style="background:${bg};border:1px solid ${border};border-radius:8px;padding:7px 12px;display:flex;align-items:center;gap:6px">
+          <span style="font-size:14px">${t.icon}</span>
+          <div>
+            <div style="font-size:11px;color:${color};font-weight:500">${t.label}</div>
+            <div style="font-size:16px;font-weight:700;color:${color}">%${t.pct}</div>
+          </div>
+        </div>`
+      }).join('')}
+    </div>
+  </div>`
+}
+
+// ─── Card Builder ─────────────────────────────────────────
+function buildCard(item) {
+  const best = item.homeWin >= item.draw && item.homeWin >= item.awayWin ? 'home'
+    : item.draw >= item.homeWin && item.draw >= item.awayWin ? 'draw' : 'away'
+
+  const scores = item.topScores.map((s, i) =>
+    `<div class="score-cell ${i < 3 ? 'top3' : ''}"><div class="sc">${s.h}-${s.a}</div><div class="sp">%${(s.p*100).toFixed(1)}</div></div>`
+  ).join('')
+
+  const confPct = item.confidence === 'Yüksek' ? 80 : item.confidence === 'Orta' ? 50 : 25
+
+  const upsetColor = item.upsetColor || (item.upsetPct >= 40 ? 'var(--danger)' : item.upsetPct >= 22 ? 'var(--warning)' : 'var(--success)')
+  const upsetLevel = item.upsetLevel || '-'
+
+  const htSection = item.htProbs ? `
+    <div class="score-section">
+      <h4>İlk Yarı Tahmini</h4>
+      <div class="prob-grid" style="margin-bottom:0">
+        <div class="prob-cell"><div class="pct" style="font-size:16px">%${item.htProbs.homeWin}</div><div class="plbl">1Y1</div></div>
+        <div class="prob-cell"><div class="pct" style="font-size:16px">%${item.htProbs.draw}</div><div class="plbl">1YX</div></div>
+        <div class="prob-cell"><div class="pct" style="font-size:16px">%${item.htProbs.awayWin}</div><div class="plbl">1Y2</div></div>
+      </div>
+    </div>` : ''
+
+  const extraStats = item.over25 != null ? `
+    <div class="score-section">
+      <h4>Detaylı Tahminler</h4>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div class="stat-row-card">
+          <span class="sr-label">Üst 2.5 Gol</span>
+          <span class="sr-val" style="color:${item.over25>50?'var(--success)':'var(--danger)'}">%${item.over25}</span>
+        </div>
+        <div class="stat-row-card">
+          <span class="sr-label">Alt 2.5 Gol</span>
+          <span class="sr-val" style="color:${item.under25Pct>50?'var(--success)':'var(--danger)'}">%${item.under25Pct}</span>
+        </div>
+        <div class="stat-row-card">
+          <span class="sr-label">KG Var</span>
+          <span class="sr-val" style="color:${item.btts>50?'var(--success)':'var(--danger)'}">%${item.btts}</span>
+        </div>
+        <div class="stat-row-card">
+          <span class="sr-label">KG Yok</span>
+          <span class="sr-val" style="color:${item.noBtts>50?'var(--success)':'var(--danger)'}">%${item.noBtts}</span>
+        </div>
+      </div>
+
+      <h4 style="margin-bottom:8px">Korner Tahmini</h4>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
+        <div class="stat-row-card" style="text-align:center">
+          <span class="sr-label">${item.home.split(' ')[0]}</span>
+          <span class="sr-val" style="display:block;font-size:18px">${item.cornersH}</span>
+        </div>
+        <div class="stat-row-card" style="text-align:center">
+          <span class="sr-label">Toplam</span>
+          <span class="sr-val" style="display:block;font-size:18px">${item.cornersTotal}</span>
+        </div>
+        <div class="stat-row-card" style="text-align:center">
+          <span class="sr-label">${item.away.split(' ')[0]}</span>
+          <span class="sr-val" style="display:block;font-size:18px">${item.cornersA}</span>
+        </div>
+      </div>
+      <div class="stat-row-card" style="margin-bottom:10px">
+        <span class="sr-label">Üst 9.5 Korner</span>
+        <span class="sr-val" style="color:${item.cornersOver9>50?'var(--success)':'var(--text2)'}">%${item.cornersOver9}</span>
+      </div>
+
+      <h4 style="margin-bottom:8px">Kart Beklentisi</h4>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
+        <div class="stat-row-card" style="text-align:center">
+          <span class="sr-label">Toplam Kart</span>
+          <span class="sr-val" style="display:block;font-size:18px">${item.totalCards}</span>
+        </div>
+        <div class="stat-row-card" style="text-align:center">
+          <span class="sr-label">Sarı Kart</span>
+          <span class="sr-val" style="display:block;font-size:18px;color:var(--warning)">${item.yellowCards}</span>
+        </div>
+        <div class="stat-row-card" style="text-align:center">
+          <span class="sr-label">Kırmızı Kart</span>
+          <span class="sr-val" style="display:block;font-size:18px;color:var(--danger)">%${item.redCardPct}</span>
+        </div>
+      </div>
+
+      <h4 style="margin-bottom:8px">Sürpriz / Alt Üst Faktörü</h4>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-left:3px solid ${upsetColor};border-radius:0 8px 8px 0;padding:10px 12px;display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:12px;color:var(--text2)">Alt üst olma ihtimali</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">${item.upsetPct >= 40 ? 'Favori sürpriz yapabilir, dikkat!' : item.upsetPct >= 22 ? 'Orta düzeyde sürpriz riski mevcut' : 'Favori güçlü, sürpriz ihtimali düşük'}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:22px;font-weight:700;color:${upsetColor}">%${item.upsetPct}</div>
+          <div style="font-size:11px;color:${upsetColor}">${upsetLevel}</div>
+        </div>
+      </div>
+    </div>` : ''
+
+  return `
+  <div class="card">
+    <div class="card-header">
+      <div class="matchup">${item.home} <span>vs</span> ${item.away}</div>
+      <span class="conf-badge conf-${item.confidence}">${item.confidence} Güven</span>
+    </div>
+
+    <div class="prob-grid">
+      <div class="prob-cell ${best === 'home' ? 'best' : ''}">
+        <div class="pct">%${item.homeWin}</div>
+        <div class="plbl">1 (Ev)</div>
+      </div>
+      <div class="prob-cell ${best === 'draw' ? 'best' : ''}">
+        <div class="pct">%${item.draw}</div>
+        <div class="plbl">X (Beraberlik)</div>
+      </div>
+      <div class="prob-cell ${best === 'away' ? 'best' : ''}">
+        <div class="pct">%${item.awayWin}</div>
+        <div class="plbl">2 (Dep)</div>
+      </div>
+    </div>
+
+    <div class="conf-bar-wrap">
+      <div class="conf-bar-label"><span>Güven Seviyesi</span><span>${item.confidence}</span></div>
+      <div class="conf-bar-bg"><div class="conf-bar-fill" style="width:${confPct}%"></div></div>
+    </div>
+
+    <div class="lambda-row">
+      <div class="lambda-chip"><strong>${item.lambdaH}</strong>λ Ev Beklenen Gol</div>
+      <div class="lambda-chip"><strong>${item.lambdaA}</strong>λ Dep Beklenen Gol</div>
+    </div>
+
+    ${item.keyFactor ? `<div class="key-factor">🔑 ${item.keyFactor}</div>` : ''}
+
+    ${buildRecommendations(item)}
+
+    <p class="analysis-text">${item.analysis}</p>
+
+    ${htSection}
+
+    <div class="score-section">
+      <h4>En Olası Skorlar</h4>
+      <div class="score-grid">${scores}</div>
+    </div>
+
+    ${extraStats}
+    ${buildOranSection(item)}
+  </div>`
+}
+
+// ─── History ──────────────────────────────────────────────
+function renderHistory() {
+  const el = document.getElementById('history-list')
+  if (!history.length) {
+    el.innerHTML = '<div class="history-empty">📋 Henüz analiz yok.<br><span style="font-size:12px">Analiz yaptıktan sonra burada görünür.</span></div>'
+    return
+  }
+  el.innerHTML = history.map(item => {
+    const rBtns = [
+      { key: 'win', label: '1 Kazandı', cls: 'selected-win' },
+      { key: 'draw', label: 'Beraberlik', cls: 'selected-draw' },
+      { key: 'lose', label: '2 Kazandı', cls: 'selected-lose' },
+    ].map(b => `<button class="result-btn ${item.result === b.key ? b.cls : ''}" onclick="setResult(${item.id}, '${b.key}')">${b.label}</button>`).join('')
+
+    const predicted = item.homeWin >= item.draw && item.homeWin >= item.awayWin ? 'win'
+      : item.draw >= item.homeWin && item.draw >= item.awayWin ? 'draw' : 'lose'
+
+    const correctMark = item.result ? (item.result === predicted ? ' ✅' : ' ❌') : ''
+
+    return `<div class="history-item">
+      <div class="hi-top">
+        <div class="hi-match">${item.home} vs ${item.away}${correctMark}</div>
+        <div class="hi-date">${item.date}${item.league ? ' · ' + item.league : ''}</div>
+      </div>
+      <div class="hi-probs">
+        <div class="hi-prob"><strong>%${item.homeWin}</strong>1</div>
+        <div class="hi-prob"><strong>%${item.draw}</strong>X</div>
+        <div class="hi-prob"><strong>%${item.awayWin}</strong>2</div>
+      </div>
+      <div class="hi-result">
+        <span class="hi-result-label">Sonuç:</span>
+        ${rBtns}
+      </div>
+      <div id="hi-detail-${item.id}" style="display:none;margin-top:10px;border-top:1px solid var(--border);padding-top:10px"></div>
+      <button class="btn btn-sm" style="margin-top:8px;width:100%;font-size:12px" onclick="toggleHistoryDetail(${item.id})">🔍 Analizi Tekrar Gör</button>
+    </div>`
+  }).join('')
+}
+
+function toggleHistoryDetail(id) {
+  const el = document.getElementById(`hi-detail-${id}`)
+  const btn = el.nextElementSibling
+  if (el.style.display === 'none') {
+    const item = history.find(h => h.id === id)
+    if (item) el.innerHTML = buildCard(item)
+    el.style.display = 'block'
+    btn.textContent = '▲ Kapat'
+  } else {
+    el.style.display = 'none'
+    btn.textContent = '🔍 Analizi Tekrar Gör'
+  }
+}
+
+function setResult(id, result) {
+  const item = history.find(h => h.id === id)
+  if (item) { item.result = result; saveHistory(); renderHistory(); updateAccuracyChip() }
+}
+
+function clearHistory() {
+  if (confirm('Tüm geçmiş silinsin mi?')) {
+    history = []; saveHistory(); renderHistory(); updateAccuracyChip()
+  }
+}
+
+// ─── Stats ────────────────────────────────────────────────
+function isCorrect(item) {
+  if (!item.result) return null
+  const predicted = item.homeWin >= item.draw && item.homeWin >= item.awayWin ? 'win'
+    : item.draw >= item.homeWin && item.draw >= item.awayWin ? 'draw' : 'lose'
+  return item.result === predicted
+}
+
+function renderStats() {
+  const total = history.length
+  const graded = history.filter(h => h.result).length
+  const correct = history.filter(h => isCorrect(h) === true).length
+  const acc = graded > 0 ? Math.round(correct / graded * 100) : null
+
+  document.getElementById('st-total').textContent = total
+  document.getElementById('st-graded').textContent = graded
+  document.getElementById('st-correct').textContent = correct
+  document.getElementById('st-accuracy').textContent = acc !== null ? acc + '%' : '-'
+  document.getElementById('st-accuracy').style.color = acc === null ? 'var(--text)' : acc >= 50 ? 'var(--success)' : 'var(--danger)'
+
+  const detail = document.getElementById('stats-detail')
+  if (graded < 3) {
+    detail.innerHTML = '<div style="color:var(--text2);font-size:13px;text-align:center;padding:1rem">En az 3 sonuç girildiğinde detaylı istatistikler görünür.</div>'
+    return
+  }
+
+  const byConf = { Yüksek: { c: 0, t: 0 }, Orta: { c: 0, t: 0 }, Düşük: { c: 0, t: 0 } }
+  history.forEach(h => {
+    if (!h.result || !h.confidence) return
+    const g = byConf[h.confidence]
+    if (!g) return
+    g.t++
+    if (isCorrect(h)) g.c++
+  })
+
+  detail.innerHTML = `<div class="card"><h4 style="font-size:12px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px">Güven Seviyesine Göre</h4>` +
+    Object.entries(byConf).map(([lvl, d]) => {
+      if (!d.t) return ''
+      const pct = Math.round(d.c / d.t * 100)
+      return `<div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+          <span>${lvl}</span><span style="color:${pct>=50?'var(--success)':'var(--danger)'}"><strong>${pct}%</strong> (${d.c}/${d.t})</span>
+        </div>
+        <div style="background:var(--surface2);border-radius:4px;height:6px;overflow:hidden">
+          <div style="width:${pct}%;height:100%;background:${pct>=50?'var(--success)':'var(--danger)'};border-radius:4px"></div>
+        </div>
+      </div>`
+    }).join('') + '</div>'
+}
+
+function updateAccuracyChip() {
+  const graded = history.filter(h => h.result).length
+  const correct = history.filter(h => isCorrect(h) === true).length
+  const chip = document.getElementById('accuracyChip')
+  if (graded < 1) { chip.style.display = 'none'; return }
+  const acc = Math.round(correct / graded * 100)
+  chip.style.display = 'block'
+  document.getElementById('accuracyNum').textContent = acc + '%'
+  document.getElementById('accuracyNum').style.color = acc >= 50 ? 'var(--success)' : 'var(--danger)'
+}
+
+// ─── Oran Analizi (Kitapçık Formülleri) ──────────────────
+function oranAnaliz(ms1, ms0, ms2) {
+  if (!ms1 || !ms2) return []
+  const tips = []
+  const near = (a, b, tol = 0.15) => Math.abs(a - b) <= tol
+  const inRange = (a, min, max) => a >= min && a <= max
+
+  // ════════════════════════════════════════
+  // KİTAPÇIK 3 — 2/1 ve 1/2 FORMÜLLER
+  // ════════════════════════════════════════
+
+  // Kitapçık 3'teki tüm 2/1 kombinasyonlarını tek fonksiyonla kontrol et
+  // Temel formül: (MS1 veya MS2'de 1.80/1.90) + (karşı tarafta veya MS0'da 2.80/2.90)
+  // Sayfa 99: "ister 1.90'a 2.90 olarak görün, ister 1.90'a 2.80 olarak görün"
+  const is190 = v => near(v, 1.90, 0.18)  // 1.72 - 2.08
+  const is180 = v => near(v, 1.80, 0.13)  // 1.67 - 1.93
+  const is290 = v => near(v, 2.90, 0.18)  // 2.72 - 3.08
+  const is280 = v => near(v, 2.80, 0.13)  // 2.67 - 2.93
+
+  // ── TARAFLARDA (MS1 vs MS2) ──
+  // 1.90'a 2.90 / 1.90'a 2.80 → 2/1
+  if ((is190(ms1) && (is290(ms2) || is280(ms2))) && !near(ms1, ms2, 0.05)) {
+    tips.push({ icon: '🔄', label: '✅ 2/1 Formülü', detail: `MS1≈${ms1} · MS2≈${ms2} — Kitapçık 3 temel formülü. Maç 2-1 veya 2/1 sonuçlanabilir.`, color: 'var(--success)', strong: true })
+  }
+  // 2.90'a 1.90 / 2.80'e 1.90 → 1/2
+  if (((is290(ms1) || is280(ms1)) && is190(ms2)) && !near(ms1, ms2, 0.05)) {
+    tips.push({ icon: '🔄', label: '✅ 1/2 Formülü', detail: `MS1≈${ms1} · MS2≈${ms2} — Deplasman versiyonu. Maç 1-2 veya 1/2 sonuçlanabilir.`, color: 'var(--success)', strong: true })
+  }
+  // 1.80'e 2.80 → 2/1
+  if (is180(ms1) && is280(ms2) && !is190(ms1) && !is290(ms2)) {
+    tips.push({ icon: '🔄', label: '✅ 2/1 (1.80/2.80 Evrimi)', detail: `MS1≈${ms1} · MS2≈${ms2} — 1.90/2.90 formülünün evrimleşmiş hali. 2-1 veya 2/1 sinyali.`, color: 'var(--success)', strong: true })
+  }
+  // 2.80'e 1.80 → 1/2
+  if (is280(ms1) && is180(ms2) && !is290(ms1) && !is190(ms2)) {
+    tips.push({ icon: '🔄', label: '✅ 1/2 (2.80/1.80 Evrimi)', detail: `MS1≈${ms1} · MS2≈${ms2} — Evrimleşmiş 1/2 sinyali.`, color: 'var(--success)', strong: true })
+  }
+
+  // ── YAN YANA (MS0 içinde) — Sayfa 52'deki tüm kombinasyonlar ──
+  // MS1=1.90 + MS0=2.90 → 2/1
+  if (ms0 && is190(ms1) && is290(ms0)) {
+    tips.push({ icon: '🔄', label: '✅ Yan Yana 2/1 (1.90·2.90)', detail: `MS1≈${ms1} · MS0≈${ms0} yan yana — Şirketler rakamları taraflara taşıdı. 2/1 sinyali geçerli.`, color: 'var(--success)', strong: true })
+  }
+  // MS2=1.90 + MS0=2.90 → 1/2
+  if (ms0 && is190(ms2) && is290(ms0)) {
+    tips.push({ icon: '🔄', label: '✅ Yan Yana 1/2 (1.90·2.90)', detail: `MS2≈${ms2} · MS0≈${ms0} yan yana — Deplasman versiyonu. 1/2 sinyali.`, color: 'var(--success)', strong: true })
+  }
+  // MS1=1.90 + MS0=2.80 → 2/1
+  if (ms0 && is190(ms1) && is280(ms0) && !is290(ms0)) {
+    tips.push({ icon: '🔄', label: '✅ Yan Yana 2/1 (1.90·2.80)', detail: `MS1≈${ms1} · MS0≈${ms0} yan yana — Sayfa 99 kuralı: 2.80 de aynı sinyal. 2/1 geçerli.`, color: 'var(--success)', strong: true })
+  }
+  // MS2=1.90 + MS0=2.80 → 1/2
+  if (ms0 && is190(ms2) && is280(ms0) && !is290(ms0)) {
+    tips.push({ icon: '🔄', label: '✅ Yan Yana 1/2 (1.90·2.80)', detail: `MS2≈${ms2} · MS0≈${ms0} yan yana — 1/2 sinyali (2.80 versiyonu).`, color: 'var(--success)', strong: true })
+  }
+  // MS1=1.80 + MS0=2.80 → 2/1
+  if (ms0 && is180(ms1) && is280(ms0) && !is190(ms1)) {
+    tips.push({ icon: '🔄', label: '✅ Yan Yana 2/1 (1.80·2.80)', detail: `MS1≈${ms1} · MS0≈${ms0} — Evrim yan yana versiyonu. 2/1 sinyali.`, color: 'var(--success)', strong: true })
+  }
+  // MS2=1.80 + MS0=2.80 → 1/2
+  if (ms0 && is180(ms2) && is280(ms0) && !is190(ms2)) {
+    tips.push({ icon: '🔄', label: '✅ Yan Yana 1/2 (1.80·2.80)', detail: `MS2≈${ms2} · MS0≈${ms0} — Evrim yan yana deplasman versiyonu. 1/2 sinyali.`, color: 'var(--success)', strong: true })
+  }
+  // MS1=1.80 + MS0=2.90 → 2/1
+  if (ms0 && is180(ms1) && is290(ms0) && !is190(ms1)) {
+    tips.push({ icon: '🔄', label: '✅ Yan Yana 2/1 (1.80·2.90)', detail: `MS1≈${ms1} · MS0≈${ms0} — Karma versiyon. 2/1 sinyali devam ediyor.`, color: 'var(--success)', strong: true })
+  }
+  // MS2=1.80 + MS0=2.90 → 1/2
+  if (ms0 && is180(ms2) && is290(ms0) && !is190(ms2)) {
+    tips.push({ icon: '🔄', label: '✅ Yan Yana 1/2 (1.80·2.90)', detail: `MS2≈${ms2} · MS0≈${ms0} — Karma deplasman versiyonu. 1/2 sinyali.`, color: 'var(--success)', strong: true })
+  }
+
+  // ── 2/1 varsa: KGV ve Handikap0 önerisi ──
+  const has21 = tips.some(t => t.label.includes('2/1') || t.label.includes('1/2'))
+  if (has21) {
+    tips.push({ icon: '⚽', label: 'KGV Var İpucu', detail: '2/1 veya 1/2 beklenen maçlarda KGV Var da mantıklı bir alternatiftir.', color: 'var(--accent)', strong: false })
+    tips.push({ icon: '🥊', label: 'Handikap0 Öner', detail: 'En güvenli seçenek: 1 farkla kazanan tarafa Handikap0. 2-1 bekliyorsan ama tersten 1-0 veya 3-2 de bitebilir — Handikap0 hepsini kapsar.', color: 'var(--accent)', strong: false })
+  }
+
+  // ════════════════════════════════════════
+  // KİTAPÇIK 1 — 2-0 / 0-2 FORMÜLLER
+  // ════════════════════════════════════════
+
+  // ── Formül E: MS1/MS2'de 1.60-1.69 → 2-0 ──
+  const sideWith160 = inRange(ms1, 1.55, 1.69) ? 'ev' : inRange(ms2, 1.55, 1.69) ? 'deplasman' : null
+  if (sideWith160 && !has21) {
+    const skor = sideWith160 === 'ev' ? '2-0' : '0-2'
+    tips.push({ icon: '🎯', label: `${skor} Skor — 1.60 Formülü`, detail: `${sideWith160 === 'ev' ? 'MS1' : 'MS2'}≈1.60-1.69 arası — Bu oran aralığında en çok çıkan skor ${skor}. Formda olan taraf ${skor} kazanır. Son 5 maçında daha çok galibiyet alan tarafa oyna.`, color: 'var(--warning)', strong: true })
+    tips.push({ icon: '✅', label: 'MS 1.5 Üst Güvenli', detail: '1.60 oranlı maçlarda MS 2.5 üst riskli (büyük ihtimal 2-0 biter). MS 1.5 üst en karlı seçenek.', color: 'var(--success)', strong: false })
+  }
+
+  // ── Formül F: MS1/MS2'de 1.70-1.98 arası → 2-0 veya 2-1 ──
+  const sideWith170 = inRange(ms1, 1.70, 1.98) ? 'ev' : inRange(ms2, 1.70, 1.98) ? 'deplasman' : null
+  if (sideWith170 && !has21 && !sideWith160) {
+    const skor = sideWith170 === 'ev' ? '2-0' : '0-2'
+    // Eğer yanında 2.80/2.90 varsa 2-1 formülü tetiklenir
+    const hasPair = ms0 && (near(ms0, 2.80, 0.15) || near(ms0, 2.90, 0.18))
+    if (hasPair) {
+      tips.push({ icon: '⚠️', label: `${skor} Değil → 2-1 Oyna!`, detail: `MS${sideWith170 === 'ev' ? '1' : '2'}≈1.70-1.98 VE yanında 2.80/2.90 var — Kitapçık 3 kuralı: Bu durumda ${skor} değil, 2-1 / 1-2 skor dene! Handikap0 en güvenli.`, color: 'var(--danger)', strong: true })
+    } else {
+      tips.push({ icon: '🎯', label: `${skor} Mümkün`, detail: `MS${sideWith170 === 'ev' ? '1' : '2'}≈1.70-1.98 — 2-0 / 0-2 skor mümkün. Formda olan tarafa bak. Son 2 maçında üst üste galibiyet alan takım 2 gol atabilir.`, color: 'var(--warning)', strong: false })
+      tips.push({ icon: '✅', label: 'MS 1.5 Üst Tercih Et', detail: 'Bu oran aralığında MS 1.5 üst en güvenli. Taraf almaktan kaçın; formu daha iyi olan tarafa 2-0 oyna.', color: 'var(--success)', strong: false })
+    }
+  }
+
+  // ── Formül G: Hepsi 2.xx → 2-0 / 0-2 ──
+  if (!has21 && !sideWith160 && !sideWith170 &&
+      inRange(ms1, 1.85, 2.80) && ms0 && inRange(ms0, 2.50, 3.60) && inRange(ms2, 1.85, 2.80)) {
+    const skor = ms1 < ms2 ? '2-0' : '0-2'
+    tips.push({ icon: '🎯', label: `${skor} Skor Sinyali (Hepsi 2.xx)`, detail: `MS1=${ms1} · MS0=${ms0} · MS2=${ms2} hepsi 2.xx bandında — En çok çıkan skor ${skor}. MS 2.5 üst bu tip maçlarda çok riskli!`, color: 'var(--warning)', strong: true })
+    tips.push({ icon: '✅', label: 'MS 1.5 Üst En Karlı', detail: 'Uzun vadede iddaada en çok kazandıran seçenek MS 1.5 üst. İkincisi MS 3.5 alt.', color: 'var(--success)', strong: false })
+  }
+
+  // ── Formül H: MS2'de 6/7/8 → İlk Yarı 2-0 ──
+  if (ms2 && (near(ms2, 6.0, 0.5) || near(ms2, 7.0, 0.5) || near(ms2, 8.0, 0.5))) {
+    tips.push({ icon: '1️⃣', label: 'İlk Yarı 2-0 Sinyali', detail: `MS2≈${ms2} (6/7/8 bandı) — Büyük güç farkı var. Kitapçık kuralı: MS2'de 6, 7 veya 8 yazıyorsa ilk yarı genelde 2-0 biter. Devre arası 3-0 skor: %18.2 · 4-0 skor: %10.1 olasılık (şampiyon adayıysa daha yüksek).`, color: 'var(--success)', strong: true })
+  }
+
+  // ── Formül I: Büyük favori (MS1 < 1.50 ve MS2 > 3.50) → 2-0 riski ──
+  if (ms1 < 1.50 && ms2 > 3.50 && !has21) {
+    tips.push({ icon: '🏆', label: 'Güçlü Favori — 2-0 Riski', detail: `MS1=${ms1} çok düşük — Büyük takım 2-0 yapıp vitesi boşa alabilir. MS 2.5 üst riskli. MS 1.5 üst veya "Ev takımı 1.5 üst gol atar" daha güvenli.`, color: 'var(--warning)', strong: true })
+  }
+
+  // ════════════════════════════════════════
+  // KİTAPÇIK 2 — 4-0/0-4 · 3-0/0-3 FORMÜLLER
+  // ════════════════════════════════════════
+
+  // ── 4-0 Potansiyeli: MS1 çok düşük + MS2 çok yüksek ──
+  if (ms1 < 1.35 && ms2 > 6.0) {
+    tips.push({ icon: '💥', label: '4-0 Potansiyeli (Kitapçık 2)', detail: `MS1=${ms1} · MS2=${ms2} — Çok büyük güç farkı. Büyük takım zayıf rakibe 4 atabilir. Maç önü: "Ev kazanır + 2.5 üst" en güvenli. Canlıda 3-0'a geldikten sonra MS 3.5 üst dene (%82 ihtimal). 4-0'a geldikten sonra MS 4.5 üst ALMA.`, color: 'var(--danger)', strong: true })
+    tips.push({ icon: '⚡', label: '4-0 Sonrası Kural', detail: 'Bu maç 4-0 / 0-4 / 3-0 / 0-3 biterse → Galibin BİR SONRAKİ maçına dikkat! O maçta 2/1 veya 1/2 çıkma ihtimali artar. Büyük galibiyet = rehavet tuzağı.', color: 'var(--warning)', strong: false })
+  }
+
+  // ── 3-0/0-3 Potansiyeli: MS1 1.35-1.55 arası + MS2 > 4.0 ──
+  if (inRange(ms1, 1.35, 1.55) && ms2 > 4.0 && !has21) {
+    tips.push({ icon: '🎯', label: '3-0 Potansiyeli (Kitapçık 2)', detail: `MS1=${ms1} · MS2=${ms2} — Belirgin güç farkı. 3-0 skor ihtimali yüksek. Maç önü MS 2.5 üst oyna. Canlıda 2-0'a geldikten sonra "Ev takımı 0.5 üst gol atar" değerlendirilebilir.`, color: 'var(--warning)', strong: true })
+    tips.push({ icon: '⚡', label: '3-0/4-0 Sonrası 2/1 Kuralı', detail: 'Bu maç 3-0 / 4-0 / 0-3 / 0-4 biterse → Galibin bir sonraki maçında 2/1 veya 1/2 ihtimali ARTAR. 3-0 sonrası bu etki 4-0 sonrasından bile güçlüdür (Kitapçık 2).', color: 'var(--accent)', strong: false })
+  }
+
+  // ── Rezalet Formülü: Çok düşük favori + yüksek MS0 → büyük takım rezil olabilir ──
+  if (ms1 < 1.40 && ms0 > 4.5 && ms2 > 5.0) {
+    tips.push({ icon: '😱', label: 'Rezalet Formülü (Kitapçık 2)', detail: `MS1=${ms1} çok düşük ama MS0=${ms0} yüksek — Bu büyük takım bazen beklenmedik yenilgi alır. Eğer bu maçtan önce takım kötü bir sonuç aldıysa ve şimdi kendi evinde oynuyorsa MS 3.5 üst veya MS 4.5 üst düşünülebilir. Motivasyon yüksek olur.`, color: 'var(--danger)', strong: false })
+  }
+
+  // ── 2-2 Sonrası 2/1 Uyarısı (bilgi notu olarak) ──
+  if (ms0 && near(ms0, 3.30, 0.30) && near(ms1, ms2, 0.30)) {
+    tips.push({ icon: '🔁', label: '2-2 Dengeli Maç → 2/1 Takibi', detail: `MS1≈${ms1} · MS2≈${ms2} dengeli maç. Kitapçık 2 notu: Eğer bu maç 2-2 biterse, bir sonraki karşılaşmada 2/1 veya 1/2 ihtimali artar. Takipte kal.`, color: 'var(--accent)', strong: false })
+  }
+
+  // ── Canlı Bahis Tüyoları ──
+  if (!tips.length && ms1 && ms2) {
+    tips.push({ icon: '📺', label: 'Canlı Bahis Kuralları', detail: '1-0\'ken MS 1.5 üst ✅ · 2-0\'ken MS 2.5 üst ❌ · 3-0\'ken MS 3.5 üst ✅ · 0-0 dk.78+ → MS 0.5 üst %70-80 gelir', color: 'var(--accent)', strong: false })
+  }
+
+  // ── Beraberlik Favori ──
+  if (ms0 && ms0 < ms1 && ms0 < ms2) {
+    tips.push({ icon: '🤝', label: 'Beraberlik Favori', detail: `MS0=${ms0} en düşük oran — Beraberlik matematiksel favori. Handikap0 veya MS 2.5 alt düşünülebilir.`, color: 'var(--warning)', strong: false })
+  }
+
+  // Tekrar eden başlıkları temizle
+  const seen = new Set()
+  return tips.filter(t => { if (seen.has(t.label)) return false; seen.add(t.label); return true })
+}
+
+function previewOranAnaliz() {
+  const ms1 = parseFloat(document.getElementById('ai-ms1').value)
+  const ms0 = parseFloat(document.getElementById('ai-ms0').value)
+  const ms2 = parseFloat(document.getElementById('ai-ms2').value)
+  const el = document.getElementById('oran-preview')
+  if (!ms1 && !ms2) { el.innerHTML = ''; return }
+  const tips = oranAnaliz(ms1, ms0, ms2)
+  if (!tips.length) { el.innerHTML = '<div style="font-size:12px;color:var(--text3)">Bu oranlarda belirgin bir formül sinyali yok.</div>'; return }
+  el.innerHTML = tips.map(t => `
+    <div style="display:flex;align-items:flex-start;gap:8px;padding:7px 10px;background:var(--surface);border:1px solid ${t.color};border-radius:8px;margin-bottom:5px">
+      <span style="font-size:16px;flex-shrink:0">${t.icon}</span>
+      <div>
+        <div style="font-size:12px;font-weight:600;color:${t.color}">${t.label}</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px;line-height:1.5">${t.detail}</div>
+      </div>
+    </div>`).join('')
+}
+
+function buildOranSection(item) {
+  if (!item.ms1 && !item.ms2) return ''
+  const tips = oranAnaliz(item.ms1, item.ms0, item.ms2)
+  if (!tips.length) return ''
+  return `<div class="score-section">
+    <h4>📊 Oran Formül Analizi</h4>
+    ${tips.map(t => `
+      <div style="display:flex;align-items:flex-start;gap:8px;padding:8px 10px;background:var(--surface2);border:1px solid ${t.color};border-radius:8px;margin-bottom:6px">
+        <span style="font-size:16px;flex-shrink:0">${t.icon}</span>
+        <div>
+          <div style="font-size:12px;font-weight:600;color:${t.color}">${t.label}</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px;line-height:1.5">${t.detail}</div>
+        </div>
+      </div>`).join('')}
+  </div>`
+}
+
+// ─── Fixtures (ESPN API) ──────────────────────────────────
+let currentLeagueId = 4399
+let currentLeagueName = 'FIFA Dünya Kupası 2026'
+
+// Lig ID → ESPN slug
+const ESPN_SLUGS = {
+  4399: 'fifa.world',
+  4681: 'tur.1',
+  4328: 'eng.1',
+  4335: 'esp.1',
+  4331: 'ger.1',
+  4332: 'ita.1',
+  4480: 'uefa.champions',
+}
+
+function espnDateRange(daysAhead = 10) {
+  const fmt = d => d.toISOString().replace(/-/g,'').split('T')[0]
+  const from = new Date()
+  const to = new Date(); to.setDate(to.getDate() + daysAhead)
+  return `${fmt(from)}-${fmt(to)}`
+}
+
+async function fetchESPNFixtures(leagueId) {
+  const slug = ESPN_SLUGS[leagueId]
+  if (!slug) return []
+  try {
+    const url = `https://site.api.espn.com/apis/site/v2/sports/soccer/${slug}/scoreboard?dates=${espnDateRange(14)}`
+    const res = await fetch(url)
+    if (!res.ok) return []
+    const data = await res.json()
+    const events = data.events || []
+    return events
+      .filter(e => {
+        const status = e.status?.type?.state
+        return status === 'pre' || status === 'in'
+      })
+      .map(e => {
+        const comp = e.competitions?.[0]
+        const home = comp?.competitors?.find(c => c.homeAway === 'home')
+        const away = comp?.competitors?.find(c => c.homeAway === 'away')
+        const d = new Date(e.date)
+        return {
+          strHomeTeam: home?.team?.displayName || '',
+          strAwayTeam: away?.team?.displayName || '',
+          dateEvent: d.toISOString().split('T')[0],
+          strTime: d.toLocaleTimeString('tr-TR', { hour:'2-digit', minute:'2-digit', timeZone:'Europe/Istanbul' }),
+          strLeague: currentLeagueName,
+        }
+      })
+      .filter(e => e.strHomeTeam && e.strAwayTeam)
+  } catch { return [] }
+}
+
+async function loadFixtures(leagueId, leagueName, btn) {
+  currentLeagueId = leagueId
+  currentLeagueName = leagueName
+  document.querySelectorAll('.league-filter-btn').forEach(b => b.classList.remove('active'))
+  if (btn) btn.classList.add('active')
+
+  const el = document.getElementById('fixtures-list')
+  el.innerHTML = '<div style="color:var(--text3);font-size:12px;padding:8px">Yükleniyor...</div>'
+
+  let events = await fetchESPNFixtures(leagueId)
+
+  // ESPN bulamazsa TheSportsDB fallback
+  if (!events.length) {
+    try {
+      const r = await fetch(`https://www.thesportsdb.com/api/v1/json/3/eventsnextleague.php?id=${leagueId}`).then(r => r.json())
+      const raw = r.events || []
+      events = raw.map(e => ({
+        strHomeTeam: e.strHomeTeam,
+        strAwayTeam: e.strAwayTeam,
+        dateEvent: e.dateEvent || '',
+        strTime: e.strTime || '',
+        strLeague: leagueName,
+      }))
+    } catch {}
+  }
+
+  if (!events.length) {
+    el.innerHTML = '<div style="color:var(--text3);font-size:12px;padding:8px">Yaklaşan maç bulunamadı.</div>'
+    return
+  }
+
+  el.innerHTML = events.slice(0, 25).map(e => {
+    const dateStr = e.dateEvent || ''
+    const timeStr = (e.strTime || '').substring(0, 5)
+    let label = ''
+    if (dateStr) {
+      const d = new Date(dateStr + 'T12:00:00')
+      const now = new Date(); now.setHours(0,0,0,0)
+      const diffDays = Math.round((d - now) / 86400000)
+      if (diffDays === 0) label = `Bugün${timeStr ? ' ' + timeStr : ''}`
+      else if (diffDays === 1) label = `Yarın${timeStr ? ' ' + timeStr : ''}`
+      else if (diffDays > 1) label = `${d.toLocaleDateString('tr-TR', { day:'numeric', month:'short' })}${timeStr ? ' · ' + timeStr : ''}`
+    }
+    const homeT = toTurkish(e.strHomeTeam)
+    const awayT = toTurkish(e.strAwayTeam)
+    const homeSafe = homeT.replace(/'/g,"\\'")
+    const awaySafe = awayT.replace(/'/g,"\\'")
+    return `<button class="fixture-btn" onclick="selectFixture('${homeSafe}','${awaySafe}','${leagueName}')">
+      <span class="fx-date">${label}</span>
+      <span class="fx-match">${homeT} vs ${awayT}</span>
+    </button>`
+  }).join('')
+}
+
+function leagueToOddsSport(league) {
+  const l = (league || '').toLowerCase()
+  if (l.includes('dünya') || l.includes('world cup') || l.includes('fifa')) return 'soccer_fifa_world_cup'
+  if (l.includes('champions')) return 'soccer_uefa_champs_league'
+  if (l.includes('europa')) return 'soccer_uefa_europa_league'
+  if (l.includes('premier') || l.includes('epl')) return 'soccer_epl'
+  if (l.includes('la liga')) return 'soccer_spain_la_liga'
+  if (l.includes('bundesliga')) return 'soccer_germany_bundesliga'
+  if (l.includes('serie a')) return 'soccer_italy_serie_a'
+  if (l.includes('ligue 1')) return 'soccer_france_ligue_one'
+  if (l.includes('süper lig') || l.includes('super lig')) return 'soccer_turkey_super_league'
+  return 'soccer_fifa_world_cup'
+}
+
+async function selectFixture(home, away, league) {
+  document.getElementById('ai-home').value = home
+  document.getElementById('ai-away').value = away
+  // Lig seçimini güncelle
+  const sel = document.getElementById('ai-league')
+  for (const opt of sel.options) {
+    if (opt.value === league || opt.text === league) { sel.value = opt.value; break }
+  }
+  // Forma scroll et
+  document.getElementById('ai-home').scrollIntoView({ behavior: 'smooth', block: 'center' })
+
+  const oddsStatusEl = document.getElementById('odds-status')
+  const oddsKey = getOddsKey()
+  if (!oddsKey) {
+    if (oddsStatusEl) { oddsStatusEl.textContent = '⚠️ Odds API key girilmemiş — Ayarlar\'dan ekle veya oranları manuel gir'; oddsStatusEl.style.display = 'block'; setTimeout(() => oddsStatusEl.style.display = 'none', 4000) }
+    return
+  }
+  if (oddsStatusEl) { oddsStatusEl.textContent = '⏳ Oranlar yükleniyor...'; oddsStatusEl.style.display = 'block' }
+  try {
+    // soccer_fifa_world_cup veya soccer_epl gibi sport key'i bul
+    const sportKey = leagueToOddsSport(league)
+    const url = `/api/odds?path=sports/${sportKey}/odds&apiKey=${oddsKey}&regions=eu&markets=h2h&bookmakers=bet365,pinnacle`
+    const res = await fetch(url)
+    const events = await res.json()
+    if (!Array.isArray(events)) throw new Error('Geçersiz yanıt')
+    // Takım adı eşleştir
+    const homeLow = trLower(home), awayLow = trLower(away)
+    const match = events.find(e => {
+      const h = trLower(e.home_team), a = trLower(e.away_team)
+      return (h.includes(homeLow) || homeLow.includes(h)) && (a.includes(awayLow) || awayLow.includes(a))
+    })
+    if (!match) throw new Error('Maç bulunamadı')
+    const bookmaker = match.bookmakers?.[0]
+    const h2h = bookmaker?.markets?.find(m => m.key === 'h2h')
+    if (!h2h) throw new Error('Oran bulunamadı')
+    const outcomes = h2h.outcomes
+    const ms1 = outcomes.find(o => trLower(o.name) === trLower(match.home_team))?.price
+    const ms2 = outcomes.find(o => trLower(o.name) === trLower(match.away_team))?.price
+    const ms0 = outcomes.find(o => o.name === 'Draw')?.price
+    if (!ms1 || !ms2 || !ms0) throw new Error('Eksik oran')
+    document.getElementById('ai-ms1').value = ms1.toFixed(2)
+    document.getElementById('ai-ms0').value = ms0.toFixed(2)
+    document.getElementById('ai-ms2').value = ms2.toFixed(2)
+    previewOranAnaliz()
+    if (oddsStatusEl) { oddsStatusEl.textContent = `✅ MS1 ${ms1.toFixed(2)} · MS0 ${ms0.toFixed(2)} · MS2 ${ms2.toFixed(2)} (${bookmaker.title})`; setTimeout(() => oddsStatusEl.style.display = 'none', 5000) }
+  } catch(e) {
+    if (oddsStatusEl) { oddsStatusEl.textContent = `⚠️ ${e.message} — oranları manuel girin`; setTimeout(() => oddsStatusEl.style.display = 'none', 4000) }
+  }
+}
+
+// ─── Settings ─────────────────────────────────────────────
+function saveApiKey() {
+  const val = document.getElementById('apikey-input').value.trim()
+  localStorage.setItem('betanaliz_apikey', val)
+  const msg = document.getElementById('apikey-msg')
+  msg.style.display = 'block'
+  setTimeout(() => msg.style.display = 'none', 2000)
+}
+
+function showError(id, msg) {
+  const el = document.getElementById(id)
+  el.textContent = msg
+  el.style.display = 'block'
+}
+
+// ─── Init ─────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const saved = getApiKey()
+  if (saved) document.getElementById('apikey-input').value = saved
+  updateAccuracyChip()
+  loadFixtures(4399, 'FIFA Dünya Kupası 2026', document.querySelector('.league-filter-btn'))
+})
+</script>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {})
+  }
+</script>
+</body>
+</html>

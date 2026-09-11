@@ -14,17 +14,20 @@ self.addEventListener('activate', e => {
 })
 
 self.addEventListener('fetch', e => {
-  // API isteklerini cache'leme, sadece app dosyalarını
-  if (e.request.url.includes('api.') || e.request.url.includes('espn.com') || e.request.url.includes('sofascore')) {
+  const url = new URL(e.request.url)
+  // Dış servisler (ESPN, TheSportsDB, Sofascore) ve /api/ hiç önbelleğe girmez:
+  // eskiden /api/odds ve TheSportsDB yanıtı bir kez kaydedilip hep o gösteriliyordu
+  if (e.request.method !== 'GET' || url.origin !== location.origin || url.pathname.startsWith('/api/')) {
     return
   }
+  // Uygulama dosyaları: önce ağ (yeni sürüm hemen gelsin), çevrimdışıyken önbellek
   e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request).then(res => {
+    fetch(e.request).then(res => {
       if (res.ok) {
         const clone = res.clone()
         caches.open(CACHE).then(c => c.put(e.request, clone))
       }
       return res
-    }))
+    }).catch(() => caches.match(e.request).then(c => c || caches.match('/index.html')))
   )
 })
